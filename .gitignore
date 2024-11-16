@@ -5,5 +5,9 @@
 !*.c
 !*.cpp
 
+# Unignore vscode config
+!.vscode/settings.json
+!.vscode/tasks.json
+
 # Unignore all dirs
 !*/
