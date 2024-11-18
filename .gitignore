@@ -9,5 +9,8 @@
 !.vscode/settings.json
 !.vscode/tasks.json
 
+# Unignore README.md
+!README.md
+
 # Unignore all dirs
 !*/
