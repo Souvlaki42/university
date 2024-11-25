@@ -6,8 +6,10 @@
 !*.cpp
 
 # Unignore vscode config
-!.vscode/settings.json
-!.vscode/tasks.json
+!.vscode
+
+# Unignore in-class
+!in-class/*.c
 
 # Unignore README.md
 !README.md
