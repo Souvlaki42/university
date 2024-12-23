@@ -122,10 +122,9 @@ struct GameResult playGame(FILE *file, int length)
       return (struct GameResult){0, EXIT_FAILURE};
     }
 
-    printf("Line: %s\n", line);
     char *line_copy = strdup(line);
     line = shuffleString(line);
-    printf("Shuffled line: %s\n", line);
+    printf("Shuffled word: %s\n", line);
 
     while (1)
     {
@@ -237,7 +236,7 @@ int printTopScores()
   FILE *scoreFile = fopen("scores.bin", "rb");
   if (!scoreFile)
   {
-    printf("Cannot open scores file\n");
+    printf("There are no scores yet\n");
     return EXIT_FAILURE;
   }
 

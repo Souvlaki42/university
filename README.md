@@ -5,6 +5,7 @@
 This repository contains the code for the university projects and personal explorations.
 
 ## Projects
+
 - [Calculator++](calc.cpp)
 - [First Assignment](first-assignment.c)
 - [Grades](grades.c)
@@ -18,3 +19,4 @@ This repository contains the code for the university projects and personal explo
 - [Pointers 1](pointers-1.c)
 - [My Swap](myswap.c)
 - [Pointers 2](pointers-2.c)
+- [Exercise 1](exersise1/main.c)
