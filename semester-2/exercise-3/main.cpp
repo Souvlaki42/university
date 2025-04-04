@@ -1,8 +1,7 @@
 #include <iostream>
 #include <cstring>
-#include <string>
 
-using std::cout, std::cin, std::endl, std::string;
+using namespace std;
 
 void print_list(char **list, int list_length)
 {
@@ -21,11 +20,11 @@ void print_list(char **list, int list_length)
   }
 }
 
-void add_string(char **&list, int &list_length, string str_input)
+void add_string(char **&list, int &list_length, const char *str_input)
 {
   for (int i = 0; i < list_length; i++)
   {
-    if (strcmp(str_input.c_str(), list[i]) == 0)
+    if (strcmp(str_input, list[i]) == 0)
     {
       cout << "Αυτή η συμβολοσειρά υπάρχει ήδη στην λίστα σας." << endl;
       return;
@@ -39,8 +38,8 @@ void add_string(char **&list, int &list_length, string str_input)
     strcpy(new_strings[i], list[i]);
   }
 
-  new_strings[list_length] = new char[str_input.length() + 1];
-  strcpy(new_strings[list_length], str_input.c_str());
+  new_strings[list_length] = new char[strlen(str_input) + 1];
+  strcpy(new_strings[list_length], str_input);
 
   delete[] list;
 
@@ -48,12 +47,12 @@ void add_string(char **&list, int &list_length, string str_input)
   list_length++;
 }
 
-void remove_string(char **&list, int &list_length, string str_input)
+void remove_string(char **&list, int &list_length, const char *str_input)
 {
   int index_to_remove = -1;
   for (int i = 0; i < list_length; i++)
   {
-    if (strcmp(str_input.c_str(), list[i]) == 0)
+    if (strcmp(str_input, list[i]) == 0)
     {
       index_to_remove = i;
       break;
@@ -90,47 +89,46 @@ void remove_string(char **&list, int &list_length, string str_input)
 // IMPORTANT: Instructions https://docs.google.com/document/d/1jNKrjStygBJd4Q_B-kcfwgPWmtULCvQYWqw6VPNtP_k/edit?tab=t.0
 int main()
 {
+  const int MAX_INPUT = 200;
+
   system("clear");
   char choice, **strings = nullptr;
   int number_of_strings = 0;
-  string str_input;
+  char *str_input = new char[MAX_INPUT];
 
   cout << "1. Εισαγωγή συμβολοσειράς" << endl;
   cout << "2. Διαγραφή συμβολοσειράς" << endl;
   cout << "3. Τύπωμα όλων των συμβολοσειρών" << endl;
   cout << "4. Έξοδος" << endl;
 
-  while (true)
+  while (choice != '4')
   {
     cout << "Επιλέξτε λειτουργια: ";
     choice = getchar();
     while (getchar() != '\n')
       ;
-    if (choice == '1')
+
+    switch (choice)
     {
+    case '1':
       system("clear");
       cout << "Δώστε μία νέα συμβολοσειρά: ";
-      getline(cin, str_input);
+      fgets(str_input, MAX_INPUT, stdin);
       add_string(strings, number_of_strings, str_input);
-    }
-    else if (choice == '2')
-    {
+      break;
+    case '2':
       system("clear");
       cout << "Δώστε μία υπάρχουσα συμβολοσειρά: ";
-      getline(cin, str_input);
+      fgets(str_input, MAX_INPUT, stdin);
       remove_string(strings, number_of_strings, str_input);
-    }
-    else if (choice == '3')
-    {
+      break;
+    case '3':
       system("clear");
       print_list(strings, number_of_strings);
-    }
-    else if (choice == '4')
-    {
       break;
-    }
-    else
-    {
+    case '4':
+      continue;
+    default:
       system("clear");
       cout << "Λάθος αριθμός λειτουργίας. Επιλέξτε έναν αριθμό από το 1 εώς το 4." << endl;
     }
@@ -141,6 +139,7 @@ int main()
     delete[] strings[i];
   }
   delete[] strings;
+  delete[] str_input;
 
   return 0;
 }
