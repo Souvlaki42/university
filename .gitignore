@@ -1,15 +1,14 @@
 # Ignore all
 *
 
-# Unignore all with .c and .cpp extensions
+# Unignore all with c,cpp,h,hpp extensions
 !*.c
 !*.cpp
+!*.h
+!*.hpp
 
 # Unignore vscode config
 !.vscode
-
-# Unignore in-class
-!in-class/*.c
 
 # Unignore README.md
 !README.md
