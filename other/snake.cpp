@@ -1,17 +1,22 @@
 #include <cursesw.h>
-#include <cstdlib>
 #include <unistd.h>
 #include <vector>
 #include <algorithm>
 #include <string>
-#include <fmt/core.h>
+#include <format>
+
+// TODO: make snake die on wall collision
+// TODO: make food not spawn on walls
+// TODO: replace MAXRAND with window dimensions
+// TODO: save high score in a encrypted file
+// Maybe cross compile the game
+// IMPORTANT: g++ snake.cpp -lncursesw -std=c++23 -o snake
 
 #define MAXRAND 20
 
 #define DELAY 100'000 // 0.1 seconds to microseconds
 
-using fmt::format;
-using std::vector, std::find, std::string;
+using std::vector, std::find, std::string, std::format;
 
 struct Point
 {
@@ -79,10 +84,6 @@ int main()
     {
       dir = {0, 1};
     }
-    else if (pressed == 'q' || pressed == 'Q')
-    {
-      break;
-    }
 
     Point new_head = {snake.front().x + dir.x, snake.front().y + dir.y};
 
@@ -139,10 +140,18 @@ int main()
 
   print_message_relative_to_center(dimensions, "GAME OVER!");
   print_message_relative_to_center(dimensions, format("Final Score: {}", score), 1);
-  print_message_relative_to_center(dimensions, "Press any key to exit...", 3);
+  print_message_relative_to_center(dimensions, "Press \"q\" to exit...", 3);
   nodelay(win, false);
-  wgetch(win);
+  while (true)
+  {
+    int ch = wgetch(win);
+    if (ch == 'q' || ch == 'Q')
+    {
+      break;
+    }
+  }
 
   endwin();
+
   return 0;
 }
