@@ -1,0 +1,11 @@
+default: build run clean
+
+build:
+	g++ main.cpp -lncursesw -std=c++23 -o output
+	chmod +x output
+
+run:
+	./output
+
+clean:
+	rm output
