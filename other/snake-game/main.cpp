@@ -58,9 +58,8 @@ void print_message_relative_to_center(Point dimensions, string msg, int rows_bel
   mvprintw(dimensions.y / 2 + rows_below_center, start_col, "%s", msg.c_str());
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-
   srand(time(NULL));
 
   // Open file only for reading initially
@@ -215,7 +214,7 @@ int main()
   print_message_relative_to_center(dimensions, "GAME OVER!");
   print_message_relative_to_center(dimensions, format("Final Score: {}", score), 1);
   print_message_relative_to_center(dimensions, format("High Score: {}", highscore), 2);
-  print_message_relative_to_center(dimensions, "Press \"q\" to exit...", 3);
+  print_message_relative_to_center(dimensions, "Press \"r\" to restart or \"q\" to exit...", 3);
 
   nodelay(win, false);
   while (true)
@@ -225,9 +224,13 @@ int main()
     {
       break;
     }
+    else if (ch == 'r' || ch == 'R')
+    {
+      endwin();
+      return main(argc, argv);
+    }
   }
 
   endwin();
-
   return 0;
 }
