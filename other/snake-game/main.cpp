@@ -20,13 +20,32 @@ struct Point
   }
 };
 
-void place_food(Point &food, const vector<Point> &snake, const int PLAY_SIZE)
+enum class FoodType
+{
+  Normal = 2,
+  Poison = 3,
+  MultiplePoints = 4,
+  Shrink = 5,
+};
+
+struct Food
+{
+  Point position;
+  FoodType type;
+};
+
+void place_food(Food &food, const vector<Point> &snake, const int PLAY_SIZE)
 {
   while (true)
   {
-    food.x = 1 + (rand() % (PLAY_SIZE - 2));
-    food.y = 1 + (rand() % (PLAY_SIZE - 2));
-    if (find(snake.begin(), snake.end(), food) == snake.end())
+    food.position.x = 1 + (random() % (PLAY_SIZE - 2));
+    food.position.y = 1 + (random() % (PLAY_SIZE - 2));
+
+    int chance = random() % 20;
+    food.type = chance > 2 ? FoodType::Normal : chance > 1 ? FoodType::Poison
+                                            : chance > 0   ? FoodType::MultiplePoints
+                                                           : FoodType::Shrink;
+    if (find(snake.begin(), snake.end(), food.position) == snake.end())
       break;
   }
 }
@@ -64,13 +83,23 @@ int main()
   Point dimensions;
   getmaxyx(win, dimensions.y, dimensions.x);
 
+  if (has_colors())
+  {
+    start_color();
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
+    init_pair(2, COLOR_RED, COLOR_BLACK);
+    init_pair(3, COLOR_GREEN, COLOR_BLACK);
+    init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(5, COLOR_BLUE, COLOR_BLACK);
+  }
+
   const int PLAY_SIZE = (dimensions.y / 10) * 10;
 
   vector<Point> snake = {{PLAY_SIZE / 2, PLAY_SIZE / 2}};
 
-  Point food;
+  Food apple;
   Point dir = {1, 0};
-  place_food(food, snake, PLAY_SIZE);
+  place_food(apple, snake, PLAY_SIZE);
 
   int score = 0;
   bool game_over = false;
@@ -113,10 +142,28 @@ int main()
 
     snake.insert(snake.begin(), new_head);
 
-    if (new_head == food)
+    if (new_head == apple.position)
     {
-      score++;
-      place_food(food, snake, PLAY_SIZE);
+      switch (apple.type)
+      {
+      case FoodType::Normal:
+        score++;
+        break;
+      case FoodType::Poison:
+        score--;
+        break;
+      case FoodType::MultiplePoints:
+        score += random() % 9 + 2;
+        break;
+      case FoodType::Shrink:
+        int parts_to_remove = random() % (snake.size() - 1) + 1;
+        for (int i = 0; i < parts_to_remove; i++)
+        {
+          snake.pop_back();
+        }
+        break;
+      }
+      place_food(apple, snake, PLAY_SIZE);
     }
     else
     {
@@ -133,12 +180,16 @@ int main()
       mvaddch(i, PLAY_SIZE, '#');
     }
 
+    attron(COLOR_PAIR(3));
     for (size_t i = 0; i < snake.size(); ++i)
     {
       mvaddch(snake[i].y + 1, snake[i].x + 1, i == 0 ? 'O' : '*');
     }
+    attroff(COLOR_PAIR(3));
 
-    mvaddch(food.y + 1, food.x + 1, '&');
+    attron(COLOR_PAIR(apple.type));
+    mvaddch(apple.position.y + 1, apple.position.x + 1, '&');
+    attroff(COLOR_PAIR(apple.type));
 
     mvprintw(PLAY_SIZE + 2, 0, "Score: %d", score);
 
