@@ -5,11 +5,16 @@
 #include <string>
 #include <format>
 #include <fstream>
+#include <unordered_map>
 
 #define DELAY 100'000 // 0.1 seconds to microseconds
 #define HIGH_SCORE_FILE "highscore.txt"
 
-using std::vector, std::find, std::string, std::format, std::fstream, std::ios;
+using std::vector, std::find, std::string, std::format, std::fstream, std::ios, std::unordered_map;
+
+// TODO: Fix flickering
+// TODO: Add high score encryption
+// TODO: SFX maybe
 
 struct Point
 {
@@ -26,6 +31,17 @@ enum class FoodType
   Poison = 3,
   MultiplePoints = 4,
   Shrink = 5,
+};
+
+enum class GameAction
+{
+  MOVE_UP,
+  MOVE_DOWN,
+  MOVE_LEFT,
+  MOVE_RIGHT,
+  QUIT,
+  RESTART,
+  NONE // No action / unrecognized key
 };
 
 struct Food
@@ -50,6 +66,56 @@ void place_food(Food &food, const vector<Point> &snake, const int PLAY_SIZE)
   }
 }
 
+void initialize_key_bindings(unordered_map<int, GameAction> &key_bindings)
+{
+  // Arrow Keys
+  key_bindings[KEY_UP] = GameAction::MOVE_UP;
+  key_bindings[KEY_DOWN] = GameAction::MOVE_DOWN;
+  key_bindings[KEY_LEFT] = GameAction::MOVE_LEFT;
+  key_bindings[KEY_RIGHT] = GameAction::MOVE_RIGHT;
+
+  // WASD (lowercase and uppercase)
+  key_bindings['w'] = GameAction::MOVE_UP;
+  key_bindings['W'] = GameAction::MOVE_UP;
+  key_bindings['s'] = GameAction::MOVE_DOWN;
+  key_bindings['S'] = GameAction::MOVE_DOWN;
+  key_bindings['a'] = GameAction::MOVE_LEFT;
+  key_bindings['A'] = GameAction::MOVE_LEFT;
+  key_bindings['d'] = GameAction::MOVE_RIGHT;
+  key_bindings['D'] = GameAction::MOVE_RIGHT;
+
+  // HJKL (lowercase and uppercase)
+  key_bindings['k'] = GameAction::MOVE_UP;
+  key_bindings['K'] = GameAction::MOVE_UP;
+  key_bindings['j'] = GameAction::MOVE_DOWN;
+  key_bindings['J'] = GameAction::MOVE_DOWN;
+  key_bindings['h'] = GameAction::MOVE_LEFT;
+  key_bindings['H'] = GameAction::MOVE_LEFT;
+  key_bindings['l'] = GameAction::MOVE_RIGHT;
+  key_bindings['L'] = GameAction::MOVE_RIGHT;
+
+  // Q for quit
+  key_bindings['q'] = GameAction::QUIT;
+  key_bindings['Q'] = GameAction::QUIT;
+
+  // R for quit
+  key_bindings['r'] = GameAction::RESTART;
+  key_bindings['R'] = GameAction::RESTART;
+}
+
+GameAction get_action(unordered_map<int, GameAction> key_bindings, int key)
+{
+  unordered_map<int, GameAction>::iterator it = key_bindings.find(key);
+  if (it != key_bindings.end())
+  {
+    return it->second;
+  }
+  else
+  {
+    return GameAction::NONE;
+  }
+}
+
 void print_message_relative_to_center(Point dimensions, string msg, int rows_below_center = 0)
 {
   int start_col = (dimensions.x - msg.length()) / 2;
@@ -61,6 +127,9 @@ void print_message_relative_to_center(Point dimensions, string msg, int rows_bel
 int main(int argc, char *argv[])
 {
   srand(time(NULL));
+
+  unordered_map<int, GameAction> key_bindings;
+  initialize_key_bindings(key_bindings);
 
   // Open file only for reading initially
   fstream read_file(HIGH_SCORE_FILE, ios::in);
@@ -78,6 +147,8 @@ int main(int argc, char *argv[])
   keypad(win, true);
   nodelay(win, true);
   curs_set(0);
+  leaveok(win, true);   // Don't update cursor position
+  scrollok(win, false); // Disable scrolling
 
   Point dimensions;
   getmaxyx(win, dimensions.y, dimensions.x);
@@ -105,21 +176,21 @@ int main(int argc, char *argv[])
 
   while (!game_over)
   {
-    int pressed = wgetch(win);
+    GameAction action = get_action(key_bindings, wgetch(win));
 
-    if (pressed == KEY_LEFT && dir.x != 1)
+    if (action == GameAction::MOVE_LEFT && dir.x != 1)
     {
       dir = {-1, 0};
     }
-    else if (pressed == KEY_RIGHT && dir.x != -1)
+    else if (action == GameAction::MOVE_RIGHT && dir.x != -1)
     {
       dir = {1, 0};
     }
-    else if (pressed == KEY_UP && dir.y != 1)
+    else if (action == GameAction::MOVE_UP && dir.y != 1)
     {
       dir = {0, -1};
     }
-    else if (pressed == KEY_DOWN && dir.y != -1)
+    else if (action == GameAction::MOVE_DOWN && dir.y != -1)
     {
       dir = {0, 1};
     }
@@ -219,12 +290,12 @@ int main(int argc, char *argv[])
   nodelay(win, false);
   while (true)
   {
-    int ch = wgetch(win);
-    if (ch == 'q' || ch == 'Q')
+    GameAction action = get_action(key_bindings, wgetch(win));
+    if (action == GameAction::QUIT)
     {
       break;
     }
-    else if (ch == 'r' || ch == 'R')
+    else if (action == GameAction::RESTART)
     {
       endwin();
       return main(argc, argv);
