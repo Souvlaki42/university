@@ -1,118 +1,120 @@
+#include "Person.h"
 #include <iostream>
 #include <string>
 #include <ctime>
+#include <cstring>
 
 using namespace std;
 
-class Person
+Person::Person(char *ID, string name, int birthYear)
 {
-private:
-  char *ID;
-  string name;
-  int birthYear;
-  string address;
-  string phone;
-  string email;
+  this->ID = ID;
+  this->name = name;
+  this->birthYear = birthYear;
+  this->address = "Άγνωστο";
+  this->phone = "Άγνωστο";
+  this->email = "Άγνωστο";
+}
 
-public:
-  Person(char *ID, string name, int birthYear)
-  {
-    this->ID = ID;
-    this->name = name;
-    this->birthYear = birthYear;
-    this->address = "Άγνωστο";
-    this->phone = "Άγνωστο";
-    this->email = "Άγνωστο";
-  }
+Person::Person(char *ID, string name, int birthYear, string address, string phone, string email)
+{
+  this->ID = ID;
+  this->name = name;
+  this->birthYear = birthYear;
+  this->address = address;
+  this->phone = phone;
+  this->email = email;
+}
 
-  Person(char *ID, string name, int birthYear, string address, string phone, string email)
-  {
-    this->ID = ID;
-    this->name = name;
-    this->birthYear = birthYear;
-    this->address = address;
-    this->phone = phone;
-    this->email = email;
-  }
+Person::Person(const Person &other)
+{
+  this->ID = new char[strlen(other.ID) + 1];
+  strcpy(this->ID, other.ID);
 
-  Person(const Person &)
-  {
-    cout << "Γιατί αντιγράφεις τον/την " << this->name << ";" << endl;
-  }
+  this->name = other.name;
+  this->birthYear = other.birthYear;
+  this->address = other.address;
+  this->phone = other.phone;
+  this->email = other.email;
 
-  ~Person()
-  {
-    delete this->ID;
-    cout << "Αντίο " << this->name << "!" << endl;
-  }
+  cout << "Αντιγράφηκε ο/η " << this->name << endl;
+}
 
-  char *getID()
+Person::~Person()
+{
+  if (this->ID != nullptr)
   {
-    cout << "" << endl;
-    return this->ID;
+    delete[] this->ID;
+    this->ID = nullptr;
   }
+  cout << "Αντίο " << this->name << "!" << endl;
+}
 
-  void setID(char *ID)
-  {
-    this->ID = ID;
-  }
+char *Person::getID()
+{
+  cout << "" << endl;
+  return this->ID;
+}
 
-  string getName()
-  {
-    return this->name;
-  }
+void Person::setID(char *ID)
+{
+  this->ID = ID;
+}
 
-  void setName(string name)
-  {
-    this->name = name;
-  }
+string Person::getName()
+{
+  return this->name;
+}
 
-  int getBirthYear()
-  {
-    return this->birthYear;
-  }
+void Person::setName(string name)
+{
+  this->name = name;
+}
 
-  void setBirthYear(int birthYear)
-  {
-    this->birthYear = birthYear;
-  }
+int Person::getBirthYear()
+{
+  return this->birthYear;
+}
 
-  string getAddress()
-  {
-    return this->address;
-  }
+void Person::setBirthYear(int birthYear)
+{
+  this->birthYear = birthYear;
+}
 
-  void setAddress(string address)
-  {
-    this->address = address;
-  }
+string Person::getAddress()
+{
+  return this->address;
+}
 
-  string getPhone()
-  {
-    return this->phone;
-  }
+void Person::setAddress(string address)
+{
+  this->address = address;
+}
 
-  void setPhone(string phone)
-  {
-    this->phone = phone;
-  }
+string Person::getPhone()
+{
+  return this->phone;
+}
 
-  string getEmail()
-  {
-    return this->email;
-  }
+void Person::setPhone(string phone)
+{
+  this->phone = phone;
+}
 
-  void setEmail(string email)
-  {
-    this->email = email;
-  }
+string Person::getEmail()
+{
+  return this->email;
+}
 
-  int getAge()
-  {
-    time_t now = time(0);
-    tm *ltm = localtime(&now);
-    int age = (1900 + ltm->tm_year) - this->birthYear;
-    cout << "Είμαι " << age << " χρονών!" << endl;
-    return age;
-  }
-};
+void Person::setEmail(string email)
+{
+  this->email = email;
+}
+
+int Person::getAge()
+{
+  time_t now = time(0);
+  tm *ltm = localtime(&now);
+  int age = (1900 + ltm->tm_year) - this->birthYear;
+  return age;
+}

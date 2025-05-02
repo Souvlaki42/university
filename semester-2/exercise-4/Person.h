@@ -4,46 +4,49 @@
 #include <iostream>
 #include <string>
 #include <ctime>
+#include <cstring>
+
+using std::string;
 
 class Person
 {
 private:
   char *ID;
-  std::string name;
+  string name;
   int birthYear;
-  std::string address;
-  std::string phone;
-  std::string email;
+  string address;
+  string phone;
+  string email;
 
 public:
-  Person(char *ID, std::string name, int birthYear);
+  Person(char *ID, string name, int birthYear);
   Person(
       char *ID,
-      std::string name,
+      string name,
       int birthYear,
-      std::string address,
-      std::string phone,
-      std::string email);
+      string address,
+      string phone,
+      string email);
   Person(const Person &);
   ~Person();
 
   char *getID();
   void setID(char *ID);
 
-  std::string getName();
-  void setName(std::string name);
+  string getName();
+  void setName(string name);
 
   int getBirthYear();
   void setBirthYear(int birthYear);
 
-  std::string getAddress();
-  void setAddress(std::string address);
+  string getAddress();
+  void setAddress(string address);
 
-  std::string getPhone();
-  void setPhone(std::string phone);
+  string getPhone();
+  void setPhone(string phone);
 
-  std::string getEmail();
-  void setEmail(std::string email);
+  string getEmail();
+  void setEmail(string email);
 
   int getAge();
 };
