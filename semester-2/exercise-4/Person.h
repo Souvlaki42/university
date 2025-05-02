@@ -1,10 +1,7 @@
 #ifndef PERSON_H
 #define PERSON_H
 
-#include <iostream>
 #include <string>
-#include <ctime>
-#include <cstring>
 
 using std::string;
 
@@ -30,25 +27,27 @@ public:
   Person(const Person &);
   ~Person();
 
-  char *getID();
+  const char *getID() const;
   void setID(char *ID);
 
-  string getName();
+  string getName() const;
   void setName(string name);
 
-  int getBirthYear();
+  int getBirthYear() const;
   void setBirthYear(int birthYear);
 
-  string getAddress();
+  string getAddress() const;
   void setAddress(string address);
 
-  string getPhone();
+  string getPhone() const;
   void setPhone(string phone);
 
-  string getEmail();
+  string getEmail() const;
   void setEmail(string email);
 
-  int getAge();
+  int getAge() const;
+
+  Person &operator=(const Person &other);
 };
 
 #endif

@@ -26,5 +26,14 @@ int main()
   people_list[1]->setPhone("6976781234");
   cout << people_list[1]->getPhone() << "\n";
 
-  delete people_list[2];
+  for (int i = 0; i < CAPACITY; i++)
+  {
+    if (people_list[i] != nullptr)
+    {
+      delete people_list[i];
+      people_list[i] = nullptr;
+    }
+  }
+  delete[] people_list;
+  people_list = nullptr;
 }
