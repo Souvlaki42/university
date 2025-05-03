@@ -17,6 +17,10 @@
 # Unignore previews
 !preview.*
 
+# Unignore audio
+!*.wav
+!*.mp3
+
 # Unignore LICENSE
 !LICENSE
 

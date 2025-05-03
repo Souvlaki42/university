@@ -22,7 +22,7 @@ A classic Snake game implementation in C++ using the ncurses library. The snake 
 ## TODO
 
 - [ ] Fix flickering
-- [ ] Add audio
+- [x] Add audio
 
 ## Building and Running
 
@@ -45,4 +45,5 @@ g++ main.cpp -lncurses -o snake
 ## License
 
 This project is licensed under [MIT](LICENSE) license.
+[Apple_Crunch_18.wav by Koops](https://freesound.org/s/20281/) -- License: Attribution 4.0
 

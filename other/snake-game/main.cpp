@@ -1,3 +1,5 @@
+#define MINIAUDIO_IMPLEMENTATION
+#include "miniaudio.h"
 #include <curses.h>
 #include <unistd.h>
 #include <vector>
@@ -8,6 +10,7 @@
 
 #define DELAY 100'000 // 0.1 seconds to microseconds
 #define HIGH_SCORE_FILE "highscore.bin"
+#define EAT_SFX_FILE "eat.wav"
 
 using std::vector, std::find, std::string, std::fstream, std::ios, std::unordered_map, std::to_string;
 
@@ -152,6 +155,14 @@ int main(int argc, char *argv[])
   Point dimensions;
   getmaxyx(stdscr, dimensions.y, dimensions.x);
 
+  ma_engine audio;
+  if (ma_engine_init(NULL, &audio) != MA_SUCCESS)
+  {
+    endwin();
+    fprintf(stderr, "Failed to initialize audio engine.\n");
+    return 1;
+  }
+
   if (has_colors())
   {
     start_color();
@@ -232,6 +243,7 @@ int main(int argc, char *argv[])
         }
         break;
       }
+      ma_engine_play_sound(&audio, EAT_SFX_FILE, NULL);
       place_food(food, snake, PLAY_SIZE);
     }
     else
@@ -283,7 +295,7 @@ int main(int argc, char *argv[])
 
   print_message_relative_to_center(dimensions, "GAME OVER!");
   print_message_relative_to_center(dimensions, "Final Score: " + to_string(score), 1);
-  print_message_relative_to_center(dimensions, "High Score: " + to_string(score), 2);
+  print_message_relative_to_center(dimensions, "High Score: " + to_string(highscore), 2);
   print_message_relative_to_center(dimensions, "Press \"r\" to restart or \"q\" to exit...", 3);
 
   nodelay(stdscr, false);
@@ -296,11 +308,13 @@ int main(int argc, char *argv[])
     }
     else if (action == GameAction::RESTART)
     {
+      ma_engine_uninit(&audio);
       endwin();
       return main(argc, argv);
     }
   }
 
+  ma_engine_uninit(&audio);
   endwin();
   return 0;
 }
