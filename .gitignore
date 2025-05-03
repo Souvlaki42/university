@@ -14,5 +14,8 @@
 # Unignore README.md
 !README.md
 
+# Unignore LICENSE
+!LICENSE
+
 # Unignore all dirs
 !*/

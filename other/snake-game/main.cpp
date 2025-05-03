@@ -1,20 +1,15 @@
-#include <cursesw.h>
+#include <curses.h>
 #include <unistd.h>
 #include <vector>
 #include <algorithm>
 #include <string>
-#include <format>
 #include <fstream>
 #include <unordered_map>
 
 #define DELAY 100'000 // 0.1 seconds to microseconds
-#define HIGH_SCORE_FILE "highscore.txt"
+#define HIGH_SCORE_FILE "highscore.bin"
 
-using std::vector, std::find, std::string, std::format, std::fstream, std::ios, std::unordered_map;
-
-// TODO: Fix flickering
-// TODO: Add high score encryption
-// TODO: SFX maybe
+using std::vector, std::find, std::string, std::fstream, std::ios, std::unordered_map, std::to_string;
 
 struct Point
 {
@@ -132,26 +127,30 @@ int main(int argc, char *argv[])
   initialize_key_bindings(key_bindings);
 
   // Open file only for reading initially
-  fstream read_file(HIGH_SCORE_FILE, ios::in);
   int highscore = 0;
-
+  fstream read_file(HIGH_SCORE_FILE, ios::in | ios::binary);
   if (read_file.is_open())
   {
-    read_file >> highscore;
+    read_file.read(reinterpret_cast<char *>(&highscore), sizeof(highscore));
+    if (read_file.gcount() != sizeof(highscore))
+    {
+      // Handle error: file might be corrupted or incomplete
+      highscore = 0;
+    }
     read_file.close();
   }
 
-  WINDOW *win = initscr();
+  initscr();
   cbreak();
   noecho();
-  keypad(win, true);
-  nodelay(win, true);
+  keypad(stdscr, true);
+  nodelay(stdscr, true);
   curs_set(0);
-  leaveok(win, true);   // Don't update cursor position
-  scrollok(win, false); // Disable scrolling
+  leaveok(stdscr, true);   // Don't update cursor position
+  scrollok(stdscr, false); // Disable scrolling
 
   Point dimensions;
-  getmaxyx(win, dimensions.y, dimensions.x);
+  getmaxyx(stdscr, dimensions.y, dimensions.x);
 
   if (has_colors())
   {
@@ -167,16 +166,16 @@ int main(int argc, char *argv[])
 
   vector<Point> snake = {{PLAY_SIZE / 2, PLAY_SIZE / 2}};
 
-  Food apple;
+  Food food;
   Point dir = {1, 0};
-  place_food(apple, snake, PLAY_SIZE);
+  place_food(food, snake, PLAY_SIZE);
 
   int score = 0;
   bool game_over = false;
 
   while (!game_over)
   {
-    GameAction action = get_action(key_bindings, wgetch(win));
+    GameAction action = get_action(key_bindings, getch());
 
     if (action == GameAction::MOVE_LEFT && dir.x != 1)
     {
@@ -197,8 +196,8 @@ int main(int argc, char *argv[])
 
     Point new_head = {snake.front().x + dir.x, snake.front().y + dir.y};
 
-    if (new_head.x < 0 || new_head.x >= PLAY_SIZE ||
-        new_head.y < 0 || new_head.y >= PLAY_SIZE)
+    if (new_head.x < 1 || new_head.x >= PLAY_SIZE - 1 ||
+        new_head.y < 1 || new_head.y >= PLAY_SIZE - 1)
     {
       game_over = true;
       break;
@@ -212,9 +211,9 @@ int main(int argc, char *argv[])
 
     snake.insert(snake.begin(), new_head);
 
-    if (new_head == apple.position)
+    if (new_head == food.position)
     {
-      switch (apple.type)
+      switch (food.type)
       {
       case FoodType::Normal:
         score++;
@@ -233,7 +232,7 @@ int main(int argc, char *argv[])
         }
         break;
       }
-      place_food(apple, snake, PLAY_SIZE);
+      place_food(food, snake, PLAY_SIZE);
     }
     else
     {
@@ -257,9 +256,9 @@ int main(int argc, char *argv[])
     }
     attroff(COLOR_PAIR(3));
 
-    attron(COLOR_PAIR(apple.type));
-    mvaddch(apple.position.y + 1, apple.position.x + 1, '&');
-    attroff(COLOR_PAIR(apple.type));
+    attron(COLOR_PAIR(food.type));
+    mvaddch(food.position.y + 1, food.position.x + 1, '&');
+    attroff(COLOR_PAIR(food.type));
 
     mvprintw(PLAY_SIZE + 2, 0, "Score: %d", score);
 
@@ -274,23 +273,23 @@ int main(int argc, char *argv[])
   {
     highscore = score;
     // Open file for writing only when needed
-    fstream write_file(HIGH_SCORE_FILE, ios::out);
+    fstream write_file(HIGH_SCORE_FILE, ios::out | ios::binary);
     if (write_file.is_open())
     {
-      write_file << highscore;
+      write_file.write(reinterpret_cast<const char *>(&highscore), sizeof(highscore));
       write_file.close();
     }
   }
 
   print_message_relative_to_center(dimensions, "GAME OVER!");
-  print_message_relative_to_center(dimensions, format("Final Score: {}", score), 1);
-  print_message_relative_to_center(dimensions, format("High Score: {}", highscore), 2);
+  print_message_relative_to_center(dimensions, "Final Score: " + to_string(score), 1);
+  print_message_relative_to_center(dimensions, "High Score: " + to_string(score), 2);
   print_message_relative_to_center(dimensions, "Press \"r\" to restart or \"q\" to exit...", 3);
 
-  nodelay(win, false);
+  nodelay(stdscr, false);
   while (true)
   {
-    GameAction action = get_action(key_bindings, wgetch(win));
+    GameAction action = get_action(key_bindings, getch());
     if (action == GameAction::QUIT)
     {
       break;
