@@ -2,6 +2,10 @@
 
 A classic Snake game implementation in C++ using the ncurses library. The snake moves around collecting food to grow longer while avoiding walls and itself.
 
+## Preview
+
+![Preview of the game](./preview.png)
+
 ## Features
 
 - Multiple food types with different effects:
