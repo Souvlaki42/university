@@ -4,6 +4,10 @@
 typedef struct Point
 {
   int x, y;
+  bool operator==(const Point &other) const
+  {
+    return x == other.x && y == other.y;
+  }
 } Point;
 
 typedef struct Dimensions
@@ -21,9 +25,10 @@ enum class Tile
   TRAP = 'T',
 };
 
-typedef struct Around
+typedef struct TileWithPosition
 {
-  Tile top, bottom, left, right, top_left, top_right, bottom_left, bottom_right;
-} Around;
+  Tile tile;
+  Point position;
+} TileWithPosition;
 
 #endif

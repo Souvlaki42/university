@@ -29,28 +29,28 @@ Map::Map(const char *map_path)
   }
   this->dimensions = Dimensions{input.length(), height};
 
-  Point tmp_random_position = {0, 0};
+  Point tmp_pos = {0, 0};
 
-  while (get_tile(tmp_random_position) != Tile::CORRIDOR)
+  while (get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR)
   {
-    tmp_random_position.x = random() % this->dimensions.width;
-    tmp_random_position.y = random() % this->dimensions.height;
+    tmp_pos.x = random() % this->dimensions.width;
+    tmp_pos.y = random() % this->dimensions.height;
   }
-  contents[tmp_random_position.y][tmp_random_position.x] = Tile::TRAP;
+  contents[tmp_pos.y][tmp_pos.x] = Tile::TRAP;
 
-  while (get_tile(tmp_random_position) != Tile::CORRIDOR)
+  while (get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR)
   {
-    tmp_random_position.x = random() % this->dimensions.width;
-    tmp_random_position.y = random() % this->dimensions.height;
+    tmp_pos.x = random() % this->dimensions.width;
+    tmp_pos.y = random() % this->dimensions.height;
   }
-  contents[tmp_random_position.y][tmp_random_position.x] = Tile::TRAP;
+  contents[tmp_pos.y][tmp_pos.x] = Tile::TRAP;
 
-  while (get_tile(tmp_random_position) != Tile::CORRIDOR)
+  while (get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR)
   {
-    tmp_random_position.x = random() % this->dimensions.width;
-    tmp_random_position.y = random() % this->dimensions.height;
+    tmp_pos.x = random() % this->dimensions.width;
+    tmp_pos.y = random() % this->dimensions.height;
   }
-  contents[tmp_random_position.y][tmp_random_position.x] = Tile::KEY;
+  contents[tmp_pos.y][tmp_pos.x] = Tile::KEY;
 }
 
 Map::~Map()
@@ -79,14 +79,14 @@ const Dimensions Map::get_dimensions() const
   return this->dimensions;
 };
 
-const Tile Map::get_tile(Point position) const
+const Tile Map::get_tile(int x, int y) const
 {
   try
   {
-    vector<Tile> row = this->contents.at(position.y);
+    vector<Tile> row = this->contents.at(y);
     try
     {
-      return row.at(position.x);
+      return row.at(x);
     }
     catch (out_of_range e)
     {

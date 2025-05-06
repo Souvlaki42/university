@@ -21,6 +21,13 @@
 !*.wav
 !*.mp3
 
+# Unignore maps
+!map*.txt
+!map*.dat
+
+# Unignore presentation pdfs
+!presentation.pdf
+
 # Unignore LICENSE
 !LICENSE
 

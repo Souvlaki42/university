@@ -2,6 +2,9 @@
 #define CHARACTER
 
 #include "utils.h"
+#include <set>
+
+using std::set;
 
 class Character
 {
@@ -10,7 +13,8 @@ private:
   char symbol;
   bool is_trapped, has_key;
   class Map &map;
-  Around look_around();
+  vector<TileWithPosition> look_around();
+  set<Point> visited;
 
 public:
   Character(class Map &map, char symbol);

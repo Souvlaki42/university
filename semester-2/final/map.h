@@ -23,7 +23,7 @@ public:
   void render();
 
   const Dimensions get_dimensions() const;
-  const Tile get_tile(Point position) const;
+  const Tile get_tile(int x, int y) const;
 };
 
 #endif
