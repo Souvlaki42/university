@@ -3,8 +3,9 @@
 
 #include "utils.h"
 #include <set>
+#include <vector>
 
-using std::set;
+using std::set, std::vector;
 
 class Character
 {

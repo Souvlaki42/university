@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
     grigorakis.render();
     asimenia.render();
 
-    // grigorakis.move();
-    // asimenia.move();
+    grigorakis.move();
+    asimenia.move();
 
     refresh();
     usleep(DELAY);

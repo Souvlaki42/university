@@ -8,9 +8,6 @@
 !*.hpp
 !justfile
 
-# Unignore vscode config
-!.vscode/*
-
 # Unignore README.md
 !README.md
 

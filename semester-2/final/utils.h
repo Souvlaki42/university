@@ -8,6 +8,12 @@ typedef struct Point
   {
     return x == other.x && y == other.y;
   }
+  bool operator<(const Point &other) const
+  {
+    if (y == other.y)
+      return x < other.x;
+    return y < other.y;
+  }
 } Point;
 
 typedef struct Dimensions
