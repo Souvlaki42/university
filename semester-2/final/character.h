@@ -11,15 +11,17 @@ class Character
 {
 private:
   Point position;
+  Point direction;
   char symbol;
   bool is_trapped, has_key;
-  class Map &map;
-  vector<TileWithPosition> look_around();
+  class Scene &scene;
+  vector<TileWithDirection> look_around();
   set<Point> visited;
 
 public:
-  Character(class Map &map, char symbol);
-  void move();
+  Character(class Scene &scene, char symbol);
+  void move_generic();
+  void move_to(int x, int y);
   void render();
   const Point get_position() const;
   void set_random_position();

@@ -14,6 +14,16 @@ typedef struct Point
       return x < other.x;
     return y < other.y;
   }
+  Point operator+=(const Point &other)
+  {
+    this->x += other.x;
+    this->y += other.y;
+    return *this;
+  }
+  Point operator+(const Point &other) const
+  {
+    return {this->x + other.x, this->y + other.y};
+  }
 } Point;
 
 typedef struct Dimensions
@@ -31,10 +41,10 @@ enum class Tile
   TRAP = 'T',
 };
 
-typedef struct TileWithPosition
+typedef struct TileWithDirection
 {
   Tile tile;
-  Point position;
-} TileWithPosition;
+  Point direction;
+} TileWithDirection;
 
 #endif

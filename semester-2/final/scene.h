@@ -8,7 +8,7 @@
 
 using std::vector, std::string, std::ifstream;
 
-class Map
+class Scene
 {
 private:
   ifstream file;
@@ -16,8 +16,8 @@ private:
   Dimensions dimensions;
 
 public:
-  Map(const char *map_path);
-  ~Map();
+  Scene(const char *map_path);
+  ~Scene();
 
   const bool is_open() const;
   void render();

@@ -1,6 +1,6 @@
 #include <curses.h>
 #include <unistd.h>
-#include "map.h"
+#include "scene.h"
 #include "character.h"
 #include <cstdlib>
 #include <ctime>
@@ -22,16 +22,16 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  Map map = Map(argv[1]);
+  Scene scene = Scene(argv[1]);
 
-  if (!map.is_open())
+  if (!scene.is_open())
   {
     cerr << "Σφάλμα: Το αρχείο χάρτη δεν μπόρεσε να ανοιχθεί.\n";
     return 1;
   }
 
-  Character grigorakis = Character(map, 'G');
-  Character asimenia = Character(map, 'S');
+  Character grigorakis = Character(scene, 'G');
+  Character asimenia = Character(scene, 'S');
 
   while (abs(asimenia.get_position().x - grigorakis.get_position().x) < 7 &&
          abs(asimenia.get_position().y - grigorakis.get_position().y) < 7)
@@ -55,12 +55,12 @@ int main(int argc, char *argv[])
   {
     erase();
 
-    map.render();
+    scene.render();
     grigorakis.render();
     asimenia.render();
 
-    grigorakis.move();
-    asimenia.move();
+    grigorakis.move_generic();
+    asimenia.move_generic();
 
     refresh();
     usleep(DELAY);

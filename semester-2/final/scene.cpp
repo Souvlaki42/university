@@ -5,11 +5,11 @@
 #include <curses.h>
 
 #include "character.h"
-#include "map.h"
+#include "scene.h"
 
 using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
-Map::Map(const char *map_path)
+Scene::Scene(const char *map_path)
 {
   this->file.open(map_path);
   string input;
@@ -53,17 +53,17 @@ Map::Map(const char *map_path)
   contents[tmp_pos.y][tmp_pos.x] = Tile::KEY;
 }
 
-Map::~Map()
+Scene::~Scene()
 {
   this->file.close();
 }
 
-const bool Map::is_open() const
+const bool Scene::is_open() const
 {
   return this->file.is_open();
 }
 
-void Map::render()
+void Scene::render()
 {
   for (size_t y = 0; y < this->contents.size(); ++y)
   {
@@ -74,12 +74,12 @@ void Map::render()
   }
 }
 
-const Dimensions Map::get_dimensions() const
+const Dimensions Scene::get_dimensions() const
 {
   return this->dimensions;
 };
 
-const Tile Map::get_tile(int x, int y) const
+const Tile Scene::get_tile(int x, int y) const
 {
   try
   {

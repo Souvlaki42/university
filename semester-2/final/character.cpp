@@ -1,33 +1,33 @@
 #include <curses.h>
 #include "character.h"
-#include "map.h"
+#include "scene.h"
 #include <vector>
 #include <algorithm>
 
 using std::copy_if, std::back_inserter, std::find;
 
-Character::Character(Map &map, char symbol) : map(map), symbol(symbol)
+Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol)
 {
   this->is_trapped = false;
   this->has_key = false;
   this->set_random_position();
 }
 
-vector<TileWithPosition> Character::look_around()
+vector<TileWithDirection> Character::look_around()
 {
-  vector<TileWithPosition> around;
+  vector<TileWithDirection> around;
   int x = this->position.x, y = this->position.y;
 
-  around.push_back({this->map.get_tile(x, y - 1), {x, y - 1}});         // TOP
-  around.push_back({this->map.get_tile(x, y + 1), {x, y + 1}});         // BOTTOM
-  around.push_back({this->map.get_tile(x - 1, y), {x - 1, y}});         // LEFT
-  around.push_back({this->map.get_tile(x + 1, y), {x + 1, y}});         // RIGHT
-  around.push_back({this->map.get_tile(x - 1, y - 1), {x - 1, y - 1}}); // TOP LEFT
-  around.push_back({this->map.get_tile(x + 1, y - 1), {x + 1, y - 1}}); // TOP RIGHT
-  around.push_back({this->map.get_tile(x - 1, y + 1), {x - 1, y + 1}}); // BOTTOM LEFT
-  around.push_back({this->map.get_tile(x + 1, y + 1), {x + 1, y + 1}}); // BOTTOM RIGHT
+  around.push_back({this->scene.get_tile(x, y - 1), {0, -1}}); // TOP
+  around.push_back({this->scene.get_tile(x, y + 1), {0, 1}});  // BOTTOM
+  around.push_back({this->scene.get_tile(x - 1, y), {-1, 0}}); // LEFT
+  around.push_back({this->scene.get_tile(x + 1, y), {1, 0}});  // RIGHT
 
-  return around;
+  vector<TileWithDirection> valid_around;
+  copy_if(around.begin(), around.end(), back_inserter(valid_around), [](TileWithDirection &t)
+          { return t.tile != Tile::NONE && t.tile != Tile::WALL; });
+
+  return valid_around;
 }
 
 void Character::render()
@@ -42,10 +42,10 @@ const Point Character::get_position() const
 
 void Character::set_random_position()
 {
-  Dimensions dimensions = this->map.get_dimensions();
+  Dimensions dimensions = this->scene.get_dimensions();
 
   Point tmp_pos = {0, 0};
-  while (map.get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR)
+  while (scene.get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR)
   {
     tmp_pos.x = random() % dimensions.width;
     tmp_pos.y = random() % dimensions.height;
@@ -54,47 +54,71 @@ void Character::set_random_position()
   this->position = tmp_pos;
 }
 
-void Character::move()
+void Character::move_generic()
 {
   if (this->is_trapped)
   {
     return;
   }
 
-  vector<TileWithPosition> around = this->look_around();
-  vector<TileWithPosition> valid_around, non_visited;
-  copy_if(around.begin(), around.end(), back_inserter(valid_around), [](TileWithPosition &t)
-          { return t.tile != Tile::NONE && t.tile != Tile::WALL; });
-  for (TileWithPosition &t : valid_around)
+  vector<TileWithDirection> around = this->look_around();
+  if (around.empty())
   {
-    if (this->visited.find(t.position) == this->visited.end())
+    this->is_trapped = true;
+    return;
+  }
+
+  for (TileWithDirection &t : around)
+  {
+    if (!this->has_key && t.tile == Tile::KEY)
     {
-      copy_if(valid_around.begin(), valid_around.end(), back_inserter(non_visited), [this](TileWithPosition &t)
-              { return visited.find(t.position) == visited.end(); });
-      break;
+      this->has_key = true;
+      this->position.x += t.direction.x;
+      this->position.y += t.direction.y;
+      this->direction = t.direction;
+      this->visited.insert({this->position.x, this->position.y});
+      return;
     }
   }
 
-  if (non_visited.size() == 0)
+  for (TileWithDirection &t : around)
   {
-    this->position = valid_around[random() % valid_around.size()].position;
+    if (t.direction == this->direction)
+    {
+      Point new_pos = {this->position.x + t.direction.x, this->position.y + t.direction.y};
+      if (this->visited.find(new_pos) == this->visited.end())
+      {
+        this->position = new_pos;
+        this->direction = t.direction;
+        this->visited.insert(new_pos);
+        return;
+      }
+    }
+  }
+
+  vector<TileWithDirection> non_visited;
+  copy_if(around.begin(), around.end(), back_inserter(non_visited), [this](TileWithDirection &t)
+          { return this->visited.find(this->position + this->direction) == this->visited.end(); });
+
+  if (non_visited.empty())
+  {
+    int random_index = random() % around.size();
+    this->position.x += around[random_index].direction.x;
+    this->position.y += around[random_index].direction.y;
+    this->direction = around[random_index].direction;
+    this->visited.insert({this->position.x, this->position.y});
   }
   else
   {
-    for (size_t i = 0; i < non_visited.size(); ++i)
-    {
-      if (non_visited[i].tile == Tile::KEY)
-      {
-        this->has_key = true;
-        this->position = non_visited[i].position;
-        this->visited.insert(this->position);
-        break;
-      }
-    }
-
-    if (!this->has_key)
-    {
-      this->position = non_visited[random() % non_visited.size()].position;
-    }
+    int random_index = random() % non_visited.size();
+    this->position.x += non_visited[random_index].direction.x;
+    this->position.y += non_visited[random_index].direction.y;
+    this->direction = non_visited[random_index].direction;
+    this->visited.insert({this->position.x, this->position.y});
   }
+}
+
+void Character::move_to(int x, int y)
+{
+  // TODO: implement
 }
