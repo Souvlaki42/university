@@ -13,7 +13,7 @@ private:
   string name;
   int semester;
 
-  Professor &professor;
+  Professor professor;
   vector<float> grades;
 
 public:
@@ -25,7 +25,7 @@ public:
   string getName() const;
   int getSemester() const;
   Professor getProfessor() const;
-  vector<float> getGrades();
+  vector<float> getGrades() const;
 
   void setCode(const string &code);
   void setName(const string &name);

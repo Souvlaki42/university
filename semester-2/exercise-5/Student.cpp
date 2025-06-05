@@ -11,7 +11,7 @@ Student::Student(const char *ID, const string &name, int birthYear, const string
                  vector<Lesson> lessons)
     : Person(ID, name, birthYear, address, phone, email), registrationNumber(registrationNumber), semester(semester), lessons(lessons) {}
 
-Student::Student(const Student &other) : Person(other), registrationNumber(registrationNumber), semester(semester), lessons(lessons) {}
+Student::Student(const Student &other) : Person(other), registrationNumber(other.registrationNumber), semester(other.semester), lessons(other.lessons) {}
 
 int Student::getRegistrationNumber() const
 {

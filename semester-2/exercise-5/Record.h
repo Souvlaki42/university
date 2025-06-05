@@ -4,6 +4,16 @@
 #include "Student.h"
 #include "Lesson.h"
 #include "Professor.h"
+#include <fstream>
+#include <stdexcept>
+#include <sstream>
+using std::runtime_error, std::string;
+
+class RecordException : public runtime_error
+{
+public:
+  explicit RecordException(const string &message) : runtime_error(message) {}
+};
 
 class Record
 {

@@ -55,7 +55,11 @@
 		"typeinfo": "cpp",
 		"variant": "cpp",
 		"print": "cpp",
-		"text_encoding": "cpp"
+		"text_encoding": "cpp",
+		"bitset": "cpp",
+		"regex": "cpp",
+		"sstream": "cpp",
+		"set": "cpp"
 	}
 }
 

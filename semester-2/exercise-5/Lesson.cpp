@@ -1,5 +1,6 @@
 #include "Lesson.h"
 #include <iostream>
+using std::cout, std::vector;
 
 Lesson::Lesson(const string &code, const string &name, int semester, Professor &professor)
     : code(code), name(name), semester(semester), professor(professor) {}
@@ -7,19 +8,19 @@ Lesson::Lesson(const string &code, const string &name, int semester, Professor &
 Lesson::Lesson(const Lesson &other)
     : code(other.code), name(other.name), semester(other.semester), professor(other.professor)
 {
-  std::cout << "Αντιγράφηκε το μάθημα " << this->name << "\n";
+  cout << "Αντιγράφηκε το μάθημα " << this->name << "\n";
 }
 
 Lesson::~Lesson()
 {
-  std::cout << "Διαγράφηκε το μάθημα " << this->name << "!\n";
+  cout << "Διαγράφηκε το μάθημα " << this->name << "!\n";
 }
 
 string Lesson::getCode() const { return code; }
 string Lesson::getName() const { return name; }
 int Lesson::getSemester() const { return semester; }
 Professor Lesson::getProfessor() const { return professor; }
-std::vector<float> Lesson::getGrades() { return grades; }
+vector<float> Lesson::getGrades() const { return grades; }
 
 void Lesson::setCode(const string &code) { this->code = code; }
 void Lesson::setName(const string &name) { this->name = name; }

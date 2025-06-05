@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ctime>
 #include <cstring>
+using std::cout;
 
 Person::Person(const char *ID, const string &name, int birthYear)
     : name(name), birthYear(birthYear), address("Άγνωστο"), phone("Άγνωστο"), email("Άγνωστο")
@@ -47,14 +48,14 @@ Person::Person(const Person &other)
     this->ID[0] = '\0';
   }
 
-  std::cout << "Αντιγράφηκε ο/η " << this->name << "\n";
+  cout << "Αντιγράφηκε ο/η " << this->name << "\n";
 }
 
 Person::~Person()
 {
   delete[] this->ID;
   this->ID = nullptr;
-  std::cout << "Αντίο " << this->name << "!\n";
+  cout << "Αντίο " << this->name << "!\n";
 }
 
 const char *Person::getID() const
