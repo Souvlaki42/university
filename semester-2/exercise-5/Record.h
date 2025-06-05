@@ -32,8 +32,8 @@ public:
   void sendEmailToAllProfessors(const string &message);
   void addGrade(const Student &student, Lesson &lesson, int grade);
   void fixGrade(const Student &student, Lesson &lesson, int grade);
-  void saveToCsv(const string &filename);
-  void loadFromCsv(const string &filename);
+  void saveToCsv();
+  void loadFromCsv();
 };
 
 #endif

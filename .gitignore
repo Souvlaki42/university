@@ -26,3 +26,6 @@
 
 # Unignore all dirs
 !*/
+
+# Ignore libraries
+miniaudio.h

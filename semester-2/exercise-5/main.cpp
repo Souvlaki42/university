@@ -13,8 +13,8 @@ int main()
   try
   {
     // Καθηγητές
-    Professor prof1("12345", "Γεώργιος Παπαδόπουλος", 1975, "ICE-AVCLOM", "Δίκτυα");
-    Professor prof2("67890", "Μαρία Αλεξίου", 1980, "ICE-HORTBO", "Βάσεις Δεδομένων");
+    Professor prof1("12345", "Γεώργιος Παπαδόπουλος", 1975, "Λεωφ. Συγγρού 123", "6977123456", "gpap@uniwa.gr", "ICE-AVCLOM", "Δίκτυα");
+    Professor prof2("67890", "Μαρία Αλεξίου", 1980, "Οδός Σόλωνος 45", "6978234567", "malex@uniwa.gr", "ICE-HORTBO", "Βάσεις Δεδομένων");
 
     // Μαθήματα
     Lesson lesson1("CS101", "Σχεδιάση δικτύων", 1, prof1);
@@ -22,10 +22,8 @@ int main()
 
     // Φοιτητές
     Student student1("AM123", "Νίκος Κωνσταντίνου", 2000,
-                     "Λεωφ. Συγγρού 123", "6977123456", "nikos@email.gr",
                      12345, 1, {lesson1, lesson2});
     Student student2("AM124", "Ελένη Παπαδοπούλου", 2001,
-                     "Οδός Σόλωνος 45", "6978234567", "eleni@email.gr",
                      12346, 1, {lesson1});
 
     // Φοιτητολόγιο
@@ -47,8 +45,13 @@ int main()
     record.sendEmailToAllProfessors("Παρακαλούμε να υποβάλετε τους βαθμούς έως την Παρασκευή.");
 
     // Αποθήκευση σε CSV
-    record.saveToCsv("academic_records.csv");
-    cout << "\nΤα δεδομένα αποθηκεύτηκαν στο αρχείο academic_records.csv\n";
+    record.saveToCsv();
+    cout << "\nΤα δεδομένα αποθηκεύτηκαν επιτυχώς στο αρχείο.\n";
+
+    // Δημιουργία νέου αρχείου και φόρτωση δεδομένων
+    Record newRecord;
+    newRecord.loadFromCsv();
+    cout << "\nΤα δεδομένα φορτώθηκαν επιτυχώς από το αρχείο.\n";
   }
   catch (const RecordException &e)
   {
@@ -65,11 +68,6 @@ int main()
     cerr << "Άγνωστο σφάλμα!\n";
     return 1;
   }
-
-  // // Δημιουργία νέου αρχείου και φόρτωση δεδομένων
-  // Record newRecord;
-  // newRecord.loadFromCsv("academic_records.csv");
-  // cout << "\nΤα δεδομένα φορτώθηκαν επιτυχώς από το αρχείο.\n";
 
   return 0;
 }
