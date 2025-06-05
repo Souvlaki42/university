@@ -4,9 +4,6 @@
 #include "Student.h"
 #include "Lesson.h"
 #include "Professor.h"
-#include <fstream>
-#include <stdexcept>
-#include <sstream>
 using std::runtime_error, std::string;
 
 class RecordException : public runtime_error
@@ -30,8 +27,8 @@ public:
   void removeLesson(const Lesson &lesson);
   void sendEmailToAllStudents(const string &message);
   void sendEmailToAllProfessors(const string &message);
-  void addGrade(const Student &student, Lesson &lesson, int grade);
-  void fixGrade(const Student &student, Lesson &lesson, int grade);
+  void addGrade(const Student &student, Lesson &lesson, float grade);
+  void fixGrade(const Student &student, Lesson &lesson, float grade);
   void saveToCsv();
   void loadFromCsv();
 };

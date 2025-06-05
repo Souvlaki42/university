@@ -6,7 +6,7 @@ Lesson::Lesson(const string &code, const string &name, int semester, Professor &
     : code(code), name(name), semester(semester), professor(professor) {}
 
 Lesson::Lesson(const Lesson &other)
-    : code(other.code), name(other.name), semester(other.semester), professor(other.professor)
+    : code(other.code), name(other.name), semester(other.semester), professor(other.professor), grades(other.grades)
 {
   cout << "Αντιγράφηκε το μάθημα " << this->name << "\n";
 }
@@ -37,6 +37,7 @@ Lesson &Lesson::operator=(const Lesson &other)
   name = other.name;
   semester = other.semester;
   professor = other.professor;
+  grades = other.grades;
 
   return *this;
 }

@@ -13,18 +13,18 @@ int main()
   try
   {
     // Καθηγητές
-    Professor prof1("12345", "Γεώργιος Παπαδόπουλος", 1975, "Λεωφ. Συγγρού 123", "6977123456", "gpap@uniwa.gr", "ICE-AVCLOM", "Δίκτυα");
-    Professor prof2("67890", "Μαρία Αλεξίου", 1980, "Οδός Σόλωνος 45", "6978234567", "malex@uniwa.gr", "ICE-HORTBO", "Βάσεις Δεδομένων");
+    Professor prof1("879056", "Γεώργιος Παπαδόπουλος", 1975, "Λεωφ. Συγγρού 123", "6977123456", "gpap@uniwa.gr", "ICE-AVCLOM", "Δίκτυα");
+    Professor prof2("456809", "Μαρία Αλεξίου", 1980, "Οδός Σόλωνος 45", "6978234567", "malex@uniwa.gr", "ICE-HORTBO", "Βάσεις Δεδομένων");
 
     // Μαθήματα
-    Lesson lesson1("CS101", "Σχεδιάση δικτύων", 1, prof1);
-    Lesson lesson2("CS102", "Βάσεις Δεδομένων", 2, prof2);
+    Lesson lesson1("ICE-501", "Σχεδιάση δικτύων", 1, prof1);
+    Lesson lesson2("ICE-702", "Βάσεις Δεδομένων", 2, prof2);
 
     // Φοιτητές
-    Student student1("AM123", "Νίκος Κωνσταντίνου", 2000,
-                     12345, 1, {lesson1, lesson2});
-    Student student2("AM124", "Ελένη Παπαδοπούλου", 2001,
-                     12346, 1, {lesson1});
+    Student student1("451086", "Νίκος Κωνσταντίνου", 2005,
+                     23390210, 4, {lesson1, lesson2});
+    Student student2("345789", "Ελένη Παπαδοπούλου", 2006,
+                     24390102, 2, {lesson1});
 
     // Φοιτητολόγιο
     Record record;

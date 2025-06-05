@@ -21,7 +21,7 @@ void Record::fixStudent(const Student &student)
       return;
     }
   }
-  throw new RecordException("Δεν υπάρχει φοιτητής με AM " + student.getRegistrationNumber());
+  throw RecordException("Δεν υπάρχει φοιτητής με AM " + std::to_string(student.getRegistrationNumber()));
 }
 
 void Record::removeStudent(const Student &student)
@@ -38,8 +38,8 @@ void Record::removeStudent(const Student &student)
       ++i;
     }
   }
-  throw new RecordException("Δεν υπάρχει φοιτητής με AM " + student.getRegistrationNumber());
-};
+  throw RecordException("Δεν υπάρχει φοιτητής με AM " + std::to_string(student.getRegistrationNumber()));
+}
 
 void Record::addLesson(const Lesson &lesson)
 {
@@ -56,8 +56,9 @@ void Record::fixLesson(const Lesson &lesson)
       return;
     }
   }
-  throw new RecordException("Δεν υπάρχει μάθημα με κωδικό " + lesson.getCode());
+  throw RecordException("Δεν υπάρχει μάθημα με κωδικό " + lesson.getCode());
 };
+
 void Record::removeLesson(const Lesson &lesson)
 {
   for (size_t i = 0; i < this->lessons.size();)
@@ -72,73 +73,68 @@ void Record::removeLesson(const Lesson &lesson)
       ++i;
     }
   }
-  throw new RecordException("Δεν υπάρχει μάθημα με κωδικό " + lesson.getCode());
-};
+  throw RecordException("Δεν υπάρχει μάθημα με κωδικό " + lesson.getCode());
+}
+
 void Record::sendEmailToAllStudents(const string &message)
 {
   cout << "Στάλθηκε email με μήνυμα \"" << message << "\" σε όλους τους φοιτητές του τμήματος με επιτυχία!\n";
-};
+}
+
 void Record::sendEmailToAllProfessors(const string &message)
 {
   cout << "Στάλθηκε email με μήνυμα \"" << message << "\" σε όλους τους καθηγητές του τμήματος με επιτυχία!\n";
-};
-void Record::addGrade(const Student &student, Lesson &lesson, int grade)
+}
+
+void Record::addGrade(const Student &student, Lesson &lesson, float grade)
 {
   if (grade < 0 || grade > 10)
   {
-    throw RecordException("Λάθος βαθμός. Οι βαθμοί είναι απο το 0 ως το 10.");
+    throw RecordException("Ο βαθμός πρέπει να είναι μεταξύ 0 και 10");
   }
 
-  bool lessonFound = false;
-  for (auto &recordLesson : lessons)
+  int lessonIndex = -1;
+  for (int i = 0; i < this->lessons.size(); i++)
   {
-    if (recordLesson.getCode() == lesson.getCode())
+    if (this->lessons[i].getCode() == lesson.getCode())
     {
-      lesson = recordLesson;
-      lessonFound = true;
+      lessonIndex = i;
       break;
     }
   }
-  if (!lessonFound)
+
+  if (lessonIndex == -1)
   {
-    throw new RecordException("Δεν υπάρχει μάθημα με κωδικό " + lesson.getCode());
+    throw RecordException("Δεν υπάρχει μάθημα με κωδικό " + lesson.getCode());
   }
 
-  bool studentFound = false;
-  size_t studentIndex = 0;
-  for (size_t i = 0; i < students.size(); i++)
+  int studentIndex = -1;
+  for (int i = 0; i < this->students.size(); i++)
   {
-    if (students[i].getRegistrationNumber() == student.getRegistrationNumber())
+    if (this->students[i].getRegistrationNumber() == student.getRegistrationNumber())
     {
-      studentFound = true;
       studentIndex = i;
       break;
     }
   }
-  if (!studentFound)
+
+  if (studentIndex == -1)
   {
-    throw new RecordException("Δεν υπάρχει φοιτητής με AM " + student.getRegistrationNumber());
+    throw RecordException("Δεν υπάρχει φοιτητής με AM " + std::to_string(student.getRegistrationNumber()));
   }
 
-  vector<float> grades = lesson.getGrades();
+  Lesson &selectedLesson = this->lessons[lessonIndex];
+  vector<float> grades = selectedLesson.getGrades();
+
   if (grades.size() <= studentIndex)
   {
-    grades.resize(students.size(), -1);
+    grades.resize(this->students.size(), -1);
   }
-
   grades[studentIndex] = grade;
-  lesson.setGrades(grades);
-
-  for (auto &recordLesson : lessons)
-  {
-    if (recordLesson.getCode() == lesson.getCode())
-    {
-      recordLesson = lesson;
-      break;
-    }
-  }
+  selectedLesson.setGrades(grades);
 }
-void Record::fixGrade(const Student &student, Lesson &lesson, int grade)
+
+void Record::fixGrade(const Student &student, Lesson &lesson, float grade)
 {
   try
   {
@@ -238,6 +234,4 @@ void Record::saveToCsv()
   gradeFile.close();
 }
 
-void Record::loadFromCsv() {
-
-};
+void Record::loadFromCsv() {}
