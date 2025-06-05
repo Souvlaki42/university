@@ -452,18 +452,12 @@ void Record::loadFromCsv()
             if (string(students[j].getID()) == studentID)
             {
               vector<float> grades = lessons[i].getGrades();
-              if (j < grades.size())
+              if (grades.size() <= j)
               {
-                grades[j] = grade;
-                lessons[i].setGrades(grades);
+                grades.resize(students.size(), -1);
               }
-              else
-              {
-                throw RecordException(
-                    "Προσοχή: Ο βαθμός δεν αποθηκεύτηκε για το μάθημα " +
-                    lessonCode + " και τον μαθητή " + studentID +
-                    " επειδή ο δείκτης είναι εκτός ορίων.");
-              }
+              grades[j] = grade;
+              lessons[i].setGrades(grades);
               break;
             }
           }
