@@ -3,8 +3,9 @@
 #include "Record.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <set>
-using std::cout, std::vector, std::ofstream, std::set;
+using std::cout, std::vector, std::ofstream, std::ifstream, std::stringstream, std::set, std::getline, std::invalid_argument;
 
 void Record::addStudent(const Student &student)
 {
@@ -142,7 +143,7 @@ void Record::fixGrade(const Student &student, Lesson &lesson, float grade)
   }
   catch (const RecordException &e)
   {
-    throw RecordException(string(e.what()));
+    throw RecordException(e);
   }
 }
 
@@ -151,7 +152,7 @@ void Record::saveToCsv()
   ofstream profFile("professors_record.csv");
   if (!profFile.is_open())
   {
-    throw RecordException("Το άρχείο καθηγητών δεν μπόρεσε να ανοιχθεί");
+    throw RecordException("Το αρχείο καθηγητών δεν μπόρεσε να ανοιχθεί");
   }
 
   profFile << "ID,name,birthYear,address,phone,email,code,specialty\n";
@@ -163,14 +164,10 @@ void Record::saveToCsv()
     const Professor &prof = lesson.getProfessor();
     if (writtenProfessorIds.insert(prof.getID()).second)
     {
-      profFile << prof.getID() << ","
-               << prof.getName() << ","
-               << prof.getBirthYear() << ","
-               << prof.getAddress() << ","
-               << prof.getPhone() << ","
-               << prof.getEmail() << ","
-               << prof.getCode() << ","
-               << prof.getSpecialty() << "\n";
+      profFile << prof.getID() << "," << prof.getName() << ","
+               << prof.getBirthYear() << "," << prof.getAddress() << ","
+               << prof.getPhone() << "," << prof.getEmail() << ","
+               << prof.getCode() << "," << prof.getSpecialty() << "\n";
     }
   }
   profFile.close();
@@ -178,43 +175,54 @@ void Record::saveToCsv()
   ofstream lessonFile("lessons_record.csv");
   if (!lessonFile.is_open())
   {
-    throw RecordException("Το άρχείο μαθημάτων δεν μπόρεσε να ανοιχθεί");
+    throw RecordException("Το αρχείο μαθημάτων δεν μπόρεσε να ανοιχθεί");
   }
 
   lessonFile << "code,name,semester,professorID\n";
   for (const auto &lesson : lessons)
   {
-    lessonFile << lesson.getCode() << ","
-               << lesson.getName() << ","
-               << lesson.getSemester() << ","
-               << lesson.getProfessor().getID() << "\n";
+    lessonFile << lesson.getCode() << "," << lesson.getName() << ","
+               << lesson.getSemester() << "," << lesson.getProfessor().getID()
+               << "\n";
   }
   lessonFile.close();
 
   ofstream studentFile("students_record.csv");
   if (!studentFile.is_open())
   {
-    throw RecordException("Το άρχείο μαθητών δεν μπόρεσε να ανοιχθεί");
+    throw RecordException("Το αρχείο μαθητών δεν μπόρεσε να ανοιχθεί");
   }
 
-  studentFile << "ID,name,birthYear,address,phone,email,registrationNumber,semester\n";
+  studentFile << "ID,name,birthYear,address,phone,email,registrationNumber,semester,lessonsCode\n";
   for (const auto &student : students)
   {
-    studentFile << student.getID() << ","
-                << student.getName() << ","
-                << student.getBirthYear() << ","
-                << student.getAddress() << ","
-                << student.getPhone() << ","
-                << student.getEmail() << ","
-                << student.getRegistrationNumber() << ","
-                << student.getSemester() << "\n";
+    const vector<Lesson> &lessons = student.getLessons();
+    if (lessons.empty())
+    {
+      studentFile << student.getID() << "," << student.getName() << ","
+                  << student.getBirthYear() << "," << student.getAddress() << ","
+                  << student.getPhone() << "," << student.getEmail() << ","
+                  << student.getRegistrationNumber() << ","
+                  << student.getSemester() << "," << "\n";
+    }
+    else
+    {
+      for (const auto &lesson : lessons)
+      {
+        studentFile << student.getID() << "," << student.getName() << ","
+                    << student.getBirthYear() << "," << student.getAddress() << ","
+                    << student.getPhone() << "," << student.getEmail() << ","
+                    << student.getRegistrationNumber() << ","
+                    << student.getSemester() << "," << lesson.getCode() << "\n";
+      }
+    }
   }
   studentFile.close();
 
   ofstream gradeFile("grades_record.csv");
   if (!gradeFile.is_open())
   {
-    throw RecordException("Το άρχείο βαθμών δεν μπόρεσε να ανοιχθεί");
+    throw RecordException("Το αρχείο βαθμών δεν μπόρεσε να ανοιχθεί");
   }
 
   gradeFile << "studentID,lessonCode,grade\n";
@@ -225,8 +233,7 @@ void Record::saveToCsv()
     {
       if (grades[i] >= 0)
       {
-        gradeFile << students[i].getID() << ","
-                  << lesson.getCode() << ","
+        gradeFile << students[i].getID() << "," << lesson.getCode() << ","
                   << grades[i] << "\n";
       }
     }
@@ -234,4 +241,242 @@ void Record::saveToCsv()
   gradeFile.close();
 }
 
-void Record::loadFromCsv() {}
+void Record::loadFromCsv()
+{
+  using std::getline;
+  using std::ifstream;
+  using std::invalid_argument;
+  using std::set;
+  using std::stof;
+  using std::stoi;
+  using std::string;
+  using std::stringstream;
+  using std::vector;
+
+  ifstream profFile("professors_record.csv");
+  if (!profFile.is_open())
+  {
+    throw RecordException("Το αρχείο καθηγητών δεν μπόρεσε να ανοιχθεί");
+  }
+
+  vector<Professor> profs;
+
+  string line;
+  getline(profFile, line);
+
+  while (getline(profFile, line))
+  {
+    stringstream ss(line);
+    string id, name, birthYearStr, address, phone, email, code, specialty;
+
+    getline(ss, id, ',');
+    getline(ss, name, ',');
+    getline(ss, birthYearStr, ',');
+    getline(ss, address, ',');
+    getline(ss, phone, ',');
+    getline(ss, email, ',');
+    getline(ss, code, ',');
+    getline(ss, specialty, ',');
+
+    try
+    {
+      int birthYear = stoi(birthYearStr);
+      Professor prof(id.c_str(), name.c_str(), birthYear, address.c_str(),
+                     phone.c_str(), email.c_str(), code.c_str(),
+                     specialty.c_str());
+      profs.push_back(prof);
+    }
+    catch (const invalid_argument &e)
+    {
+      throw RecordException("Σφάλμα στην ανάλυση του έτους γέννησης για τον "
+                            "καθηγητή " +
+                            id);
+    }
+  }
+  profFile.close();
+
+  ifstream lessonFile("lessons_record.csv");
+  if (!lessonFile.is_open())
+  {
+    throw RecordException("Το αρχείο μαθημάτων δεν μπόρεσε να ανοιχθεί");
+  }
+
+  getline(lessonFile, line);
+
+  vector<Lesson> lessons;
+  while (getline(lessonFile, line))
+  {
+    stringstream ss(line);
+    string code, name, semesterStr, professorID;
+
+    getline(ss, code, ',');
+    getline(ss, name, ',');
+    getline(ss, semesterStr, ',');
+    getline(ss, professorID, ',');
+
+    try
+    {
+      int semester = stoi(semesterStr);
+      Professor *foundProfessor = nullptr;
+      for (auto &prof : profs)
+      {
+        if (string(prof.getID()) == professorID)
+        {
+          foundProfessor = &prof;
+          break;
+        }
+      }
+      if (foundProfessor == nullptr)
+      {
+        throw RecordException("Δεν βρέθηκε καθηγητής με ID: " + professorID +
+                              " για το μάθημα: " + code);
+      }
+
+      Lesson lesson(code, name, semester, *foundProfessor);
+      lessons.push_back(lesson);
+    }
+    catch (const invalid_argument &e)
+    {
+      throw RecordException("Σφάλμα στην ανάλυση του εξαμήνου για το μάθημα " +
+                            code);
+    }
+  }
+  lessonFile.close();
+
+  ifstream studentFile("students_record.csv");
+  if (!studentFile.is_open())
+  {
+    throw RecordException("Το αρχείο μαθητών δεν μπόρεσε να ανοιχθεί");
+  }
+
+  getline(studentFile, line);
+
+  while (getline(studentFile, line))
+  {
+    stringstream ss(line);
+    string id, name, birthYearStr, address, phone, email, regNumStr, semesterStr, lessonCode;
+
+    getline(ss, id, ',');
+    getline(ss, name, ',');
+    getline(ss, birthYearStr, ',');
+    getline(ss, address, ',');
+    getline(ss, phone, ',');
+    getline(ss, email, ',');
+    getline(ss, regNumStr, ',');
+    getline(ss, semesterStr, ',');
+    getline(ss, lessonCode, ',');
+
+    try
+    {
+      int birthYear = stoi(birthYearStr);
+      int semester = stoi(semesterStr);
+      int registrationNumber = stoi(regNumStr);
+
+      Student student(id.c_str(), name.c_str(), birthYear, address.c_str(),
+                      phone.c_str(), email.c_str(), registrationNumber,
+                      semester, {});
+      bool studentExists = false;
+      for (auto &existingStudent : students)
+      {
+        if (string(existingStudent.getID()) == id)
+        {
+          student = existingStudent;
+          studentExists = true;
+          break;
+        }
+      }
+      if (!studentExists)
+      {
+        students.push_back(student);
+      }
+      if (!lessonCode.empty())
+      {
+        for (auto &lesson : lessons)
+        {
+          if (lesson.getCode() == lessonCode)
+          {
+            vector<Lesson> studentLessons = student.getLessons();
+            bool lessonAlreadyAdded = false;
+            for (const auto &l : studentLessons)
+            {
+              if (l.getCode() == lessonCode)
+              {
+                lessonAlreadyAdded = true;
+                break;
+              }
+            }
+            if (!lessonAlreadyAdded)
+            {
+              studentLessons.push_back(lesson);
+              student.setLessons(studentLessons);
+            }
+            break;
+          }
+        }
+      }
+    }
+    catch (const invalid_argument &e)
+    {
+      throw RecordException("Σφάλμα στην ανάλυση των δεδομένων μαθητή για τον μαθητή " + id);
+    }
+  }
+  studentFile.close();
+
+  ifstream gradeFile("grades_record.csv");
+  if (!gradeFile.is_open())
+  {
+    throw RecordException("Το αρχείο βαθμών δεν μπόρεσε να ανοιχθεί");
+  }
+
+  getline(gradeFile, line);
+
+  while (getline(gradeFile, line))
+  {
+    stringstream ss(line);
+    string studentID, lessonCode, gradeStr;
+
+    getline(ss, studentID, ',');
+    getline(ss, lessonCode, ',');
+    getline(ss, gradeStr, ',');
+
+    try
+    {
+      float grade = stof(gradeStr);
+
+      for (size_t i = 0; i < lessons.size(); ++i)
+      {
+        if (lessons[i].getCode() == lessonCode)
+        {
+          for (size_t j = 0; j < students.size(); ++j)
+          {
+            if (string(students[j].getID()) == studentID)
+            {
+              vector<float> grades = lessons[i].getGrades();
+              if (j < grades.size())
+              {
+                grades[j] = grade;
+                lessons[i].setGrades(grades);
+              }
+              else
+              {
+                throw RecordException(
+                    "Προσοχή: Ο βαθμός δεν αποθηκεύτηκε για το μάθημα " +
+                    lessonCode + " και τον μαθητή " + studentID +
+                    " επειδή ο δείκτης είναι εκτός ορίων.");
+              }
+              break;
+            }
+          }
+          break;
+        }
+      }
+    }
+    catch (const invalid_argument &e)
+    {
+      throw RecordException("Σφάλμα στην ανάλυση του βαθμού για τον μαθητή " +
+                            studentID + ", μάθημα " + lessonCode);
+    }
+  }
+
+  gradeFile.close();
+}

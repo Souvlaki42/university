@@ -59,7 +59,8 @@
 		"bitset": "cpp",
 		"regex": "cpp",
 		"sstream": "cpp",
-		"set": "cpp"
+		"set": "cpp",
+		"map": "cpp"
 	}
 }
 

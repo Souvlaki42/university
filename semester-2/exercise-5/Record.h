@@ -4,6 +4,7 @@
 #include "Student.h"
 #include "Lesson.h"
 #include "Professor.h"
+#include <stdexcept>
 using std::runtime_error, std::string;
 
 class RecordException : public runtime_error
