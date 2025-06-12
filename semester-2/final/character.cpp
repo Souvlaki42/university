@@ -6,6 +6,11 @@
 
 using std::copy_if, std::back_inserter, std::find;
 
+bool is_walkable(Tile t)
+{
+  return t == Tile::CORRIDOR || t == Tile::KEY || t == Tile::LADDER;
+}
+
 Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol)
 {
   this->is_trapped = false;
@@ -25,7 +30,7 @@ vector<TileWithDirection> Character::look_around()
 
   vector<TileWithDirection> valid_around;
   copy_if(around.begin(), around.end(), back_inserter(valid_around), [](TileWithDirection &t)
-          { return t.tile != Tile::NONE && t.tile != Tile::WALL; });
+          { return is_walkable(t.tile); });
 
   return valid_around;
 }
@@ -98,7 +103,9 @@ void Character::move_generic()
 
   vector<TileWithDirection> non_visited;
   copy_if(around.begin(), around.end(), back_inserter(non_visited), [this](TileWithDirection &t)
-          { return this->visited.find(this->position + this->direction) == this->visited.end(); });
+          {
+    Point new_pos = {this->position.x + t.direction.x, this->position.y + t.direction.y};
+    return this->visited.find(new_pos) == this->visited.end(); });
 
   if (non_visited.empty())
   {
