@@ -7,9 +7,11 @@
 #include "character.h"
 #include "scene.h"
 
+#define TERMINA 1000;
+
 using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
-Scene::Scene(const char *map_path)
+Scene::Scene(const char *map_path) : moves(0)
 {
   this->file.open(map_path);
   string input;
@@ -61,6 +63,16 @@ Scene::~Scene()
 const bool Scene::is_open() const
 {
   return this->file.is_open();
+}
+
+const bool Scene::is_game_over(const char ch) const
+{
+  return ch == 'q' || this->moves > TERMINA;
+}
+
+void Scene::increment_moves()
+{
+  this->moves++;
 }
 
 void Scene::render()

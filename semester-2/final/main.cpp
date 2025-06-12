@@ -12,6 +12,7 @@ using std::cout, std::cerr, std::string, std::ifstream;
 
 #define DELAY 1'000'000 // 1 second to microseconds
 
+//! Instructions: https://docs.google.com/document/d/12qdicYiuhyEsiSzJqg7Vp2uN0f_mEO32C6b3-flJtj0/edit?tab=t.0
 int main(int argc, char *argv[])
 {
   srand(time(NULL));
@@ -49,9 +50,8 @@ int main(int argc, char *argv[])
   leaveok(stdscr, true);   // Don't update cursor position
   scrollok(stdscr, false); // Disable scrolling
 
-  bool is_game_over = false;
-
-  while (!is_game_over)
+  int ch = getch();
+  while (!scene.is_game_over(ch))
   {
     erase();
 
@@ -62,13 +62,13 @@ int main(int argc, char *argv[])
     grigorakis.move_generic();
     asimenia.move_generic();
 
-    refresh();
+    wnoutrefresh(stdscr);
+    doupdate();
+
     usleep(DELAY);
 
-    if (getch() == 'q')
-    {
-      is_game_over = true;
-    }
+    scene.increment_moves();
+    ch = getch();
   }
 
   endwin();
