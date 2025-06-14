@@ -6,9 +6,9 @@
 
 using std::copy_if, std::back_inserter, std::find;
 
-bool is_walkable(Tile t)
+bool is_walkable(Tile t, bool has_key)
 {
-  return t == Tile::CORRIDOR || t == Tile::KEY || t == Tile::LADDER;
+  return t == Tile::CORRIDOR || t == Tile::KEY || t == Tile::LADDER || (has_key && t == Tile::CAGE);
 }
 
 Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol)
@@ -28,16 +28,22 @@ vector<TileWithDirection> Character::look_around()
   around.push_back({this->scene.get_tile(x - 1, y), {-1, 0}}); // LEFT
   around.push_back({this->scene.get_tile(x + 1, y), {1, 0}});  // RIGHT
 
+  around.push_back({this->scene.get_tile(x + 1, y - 1), {1, -1}});  // TOP-RIGHT
+  around.push_back({this->scene.get_tile(x - 1, y + 1), {-1, 1}});  // BOTTOM-LEFT
+  around.push_back({this->scene.get_tile(x - 1, y - 1), {-1, -1}}); // TOP-LEFT
+  around.push_back({this->scene.get_tile(x + 1, y + 1), {1, 1}});   // BOTTOM-RIGHT
+
   vector<TileWithDirection> valid_around;
-  copy_if(around.begin(), around.end(), back_inserter(valid_around), [](TileWithDirection &t)
-          { return is_walkable(t.tile); });
+  bool has_key = this->has_key;
+  copy_if(around.begin(), around.end(), back_inserter(valid_around), [](TileWithDirection &t, bool has_key)
+          { return is_walkable(t.tile, has_key); });
 
   return valid_around;
 }
 
 void Character::render()
 {
-  mvaddch(this->position.y, this->position.x, this->is_trapped ? 'C' : this->symbol);
+  mvaddch(this->position.y, this->position.x, this->is_trapped ? static_cast<char>(Tile::CAGE) : this->symbol);
 }
 
 const Point Character::get_position() const
@@ -59,7 +65,7 @@ void Character::set_random_position()
   this->position = tmp_pos;
 }
 
-void Character::move_generic()
+void Character::move()
 {
   if (this->is_trapped)
   {
@@ -75,6 +81,7 @@ void Character::move_generic()
 
   for (TileWithDirection &t : around)
   {
+    // Todo: make it remember where the key was
     if (!this->has_key && t.tile == Tile::KEY)
     {
       this->has_key = true;
@@ -84,10 +91,7 @@ void Character::move_generic()
       this->visited.insert({this->position.x, this->position.y});
       return;
     }
-  }
 
-  for (TileWithDirection &t : around)
-  {
     if (t.direction == this->direction)
     {
       Point new_pos = {this->position.x + t.direction.x, this->position.y + t.direction.y};
@@ -122,6 +126,11 @@ void Character::move_generic()
     this->position.y += non_visited[random_index].direction.y;
     this->direction = non_visited[random_index].direction;
     this->visited.insert({this->position.x, this->position.y});
+  }
+
+  if (this->scene.get_tile(this->position.x, this->position.y) == Tile::TRAP)
+  {
+    this->is_trapped = true;
   }
 }
 

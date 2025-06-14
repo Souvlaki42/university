@@ -39,6 +39,7 @@ enum class Tile
   LADDER = 'L',
   KEY = 'K',
   TRAP = 'T',
+  CAGE = 'C'
 };
 
 typedef struct TileWithDirection

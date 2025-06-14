@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
     grigorakis.render();
     asimenia.render();
 
-    grigorakis.move_generic();
-    asimenia.move_generic();
+    grigorakis.move();
+    asimenia.move();
 
     wnoutrefresh(stdscr);
     doupdate();

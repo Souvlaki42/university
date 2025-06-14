@@ -20,7 +20,7 @@ private:
 
 public:
   Character(class Scene &scene, char symbol);
-  void move_generic();
+  void move();
   void move_to(int x, int y);
   void render();
   const Point get_position() const;
