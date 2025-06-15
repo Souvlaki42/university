@@ -6,7 +6,7 @@
 
 using std::copy_if, std::back_inserter, std::find;
 
-bool is_walkable(Tile t, bool has_key)
+bool is_walkable(Tile t)
 {
   return t == Tile::CORRIDOR || t == Tile::KEY || t == Tile::LADDER || (has_key && t == Tile::CAGE);
 }
@@ -14,29 +14,29 @@ bool is_walkable(Tile t, bool has_key)
 Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol)
 {
   this->is_trapped = false;
-  this->has_key = false;
+  this->key_position = Point{-1, -1};
+  this->trap_position = Point{-1, -1};
   this->set_random_position();
 }
 
-vector<TileWithDirection> Character::look_around()
+const vector<TileWithDirection> Character::look_around_from(Point from) const
 {
   vector<TileWithDirection> around;
-  int x = this->position.x, y = this->position.y;
 
-  around.push_back({this->scene.get_tile(x, y - 1), {0, -1}}); // TOP
-  around.push_back({this->scene.get_tile(x, y + 1), {0, 1}});  // BOTTOM
-  around.push_back({this->scene.get_tile(x - 1, y), {-1, 0}}); // LEFT
-  around.push_back({this->scene.get_tile(x + 1, y), {1, 0}});  // RIGHT
+  around.push_back({this->scene.get_tile(from.x, from.y - 1), {0, -1}});
+  around.push_back({this->scene.get_tile(from.x, from.y + 1), {0, 1}});
+  around.push_back({this->scene.get_tile(from.x - 1, from.y), {-1, 0}});
+  around.push_back({this->scene.get_tile(from.x + 1, from.y), {1, 0}});
 
-  around.push_back({this->scene.get_tile(x + 1, y - 1), {1, -1}});  // TOP-RIGHT
-  around.push_back({this->scene.get_tile(x - 1, y + 1), {-1, 1}});  // BOTTOM-LEFT
-  around.push_back({this->scene.get_tile(x - 1, y - 1), {-1, -1}}); // TOP-LEFT
-  around.push_back({this->scene.get_tile(x + 1, y + 1), {1, 1}});   // BOTTOM-RIGHT
+  around.push_back({this->scene.get_tile(from.x + 1, from.y - 1), {1, -1}});
+  around.push_back({this->scene.get_tile(from.x - 1, from.y + 1), {-1, 1}});
+  around.push_back({this->scene.get_tile(from.x - 1, from.y - 1), {-1, -1}});
+  around.push_back({this->scene.get_tile(from.x + 1, from.y + 1), {1, 1}});
 
   vector<TileWithDirection> valid_around;
-  bool has_key = this->has_key;
-  copy_if(around.begin(), around.end(), back_inserter(valid_around), [](TileWithDirection &t, bool has_key)
-          { return is_walkable(t.tile, has_key); });
+  copy_if(around.begin(), around.end(), back_inserter(valid_around),
+          [](TileWithDirection &t)
+          { return is_walkable(t.tile); });
 
   return valid_around;
 }
@@ -68,23 +68,19 @@ void Character::set_random_position()
 void Character::move()
 {
   if (this->is_trapped)
-  {
     return;
-  }
 
-  vector<TileWithDirection> around = this->look_around();
+  vector<TileWithDirection> around = this->look_around_from(this->position);
   if (around.empty())
   {
-    this->is_trapped = true;
     return;
   }
 
   for (TileWithDirection &t : around)
   {
-    // Todo: make it remember where the key was
-    if (!this->has_key && t.tile == Tile::KEY)
+    if (t.tile == Tile::KEY)
     {
-      this->has_key = true;
+      this->key_position = this->position + t.direction;
       this->position.x += t.direction.x;
       this->position.y += t.direction.y;
       this->direction = t.direction;
@@ -130,11 +126,86 @@ void Character::move()
 
   if (this->scene.get_tile(this->position.x, this->position.y) == Tile::TRAP)
   {
-    this->is_trapped = true;
+    try
+    {
+      this->is_trapped = true;
+      this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
+    }
+    catch (const std::out_of_range &e)
+    {
+      this->is_trapped = false;
+    }
   }
 }
 
-void Character::move_to(int x, int y)
+void Character::move_to(int target_x, int target_y)
 {
-  // TODO: implement
+  Point start = this->position;
+  Point goal = {target_x, target_y};
+
+  if (start == goal)
+    return;
+
+  std::queue<Point> frontier;
+  std::map<Point, Point> came_from;
+  std::set<Point> visited;
+
+  frontier.push(start);
+  visited.insert(start);
+
+  while (!frontier.empty())
+  {
+    Point current = frontier.front();
+    frontier.pop();
+
+    if (current == goal)
+      break;
+
+    for (const auto &next : this->look_around_from(current))
+    {
+      Point neighbor = {current.x + next.direction.x, current.y + next.direction.y};
+      if (visited.find(neighbor) == visited.end())
+      {
+        frontier.push(neighbor);
+        visited.insert(neighbor);
+        came_from[neighbor] = current;
+      }
+    }
+  }
+
+  // No path
+  if (came_from.find(goal) == came_from.end())
+    return;
+
+  // Reconstruct path to goal
+  std::vector<Point> path;
+  Point current = goal;
+  while (current != start)
+  {
+    path.push_back(current);
+    current = came_from[current];
+  }
+  std::reverse(path.begin(), path.end());
+
+  if (!path.empty())
+  {
+    Point next_step = path.front();
+    this->direction = {next_step.x - this->position.x, next_step.y - this->position.y};
+    this->position = next_step;
+    this->visited.insert(next_step);
+
+    Tile t = this->scene.get_tile(next_step.x, next_step.y);
+    if (t == Tile::KEY)
+      this->key_position = Point{next_step.x, next_step.y};
+    if (t == Tile::TRAP)
+      try
+      {
+        this->is_trapped = true;
+        this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
+      }
+      catch (const std::out_of_range &e)
+      {
+        this->is_trapped = false;
+      }
+  }
 }

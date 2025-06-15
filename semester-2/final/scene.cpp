@@ -93,20 +93,20 @@ const Dimensions Scene::get_dimensions() const
 
 const Tile Scene::get_tile(int x, int y) const
 {
-  try
-  {
-    vector<Tile> row = this->contents.at(y);
-    try
-    {
-      return row.at(x);
-    }
-    catch (out_of_range e)
-    {
-      return Tile::NONE;
-    }
-  }
-  catch (out_of_range e)
+  if (y < 0 || y >= this->contents.size() ||
+      x < 0 || x >= this->contents[y].size())
   {
     return Tile::NONE;
-  };
+  }
+  return this->contents[y][x];
+}
+
+void Scene::set_tile(int x, int y, const Tile &newTile)
+{
+  if (y < 0 || y >= this->contents.size() ||
+      x < 0 || x >= this->contents[y].size())
+  {
+    throw out_of_range("set_tile: coordinates out of bounds");
+  }
+  this->contents[y][x] = newTile;
 }

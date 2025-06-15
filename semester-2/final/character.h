@@ -4,6 +4,8 @@
 #include "utils.h"
 #include <set>
 #include <vector>
+#include <map>
+#include <queue>
 
 using std::set, std::vector;
 
@@ -12,10 +14,13 @@ class Character
 private:
   Point position;
   Point direction;
+  Point trap_position;
+  Point key_position;
+
   char symbol;
-  bool is_trapped, has_key;
+  bool is_trapped;
   class Scene &scene;
-  vector<TileWithDirection> look_around();
+  const vector<TileWithDirection> look_around_from(Point from) const;
   set<Point> visited;
 
 public:

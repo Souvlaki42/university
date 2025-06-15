@@ -27,6 +27,7 @@ public:
 
   const Dimensions get_dimensions() const;
   const Tile get_tile(int x, int y) const;
+  void set_tile(int x, int y, const Tile &newTile);
 };
 
 #endif
