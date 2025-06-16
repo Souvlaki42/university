@@ -14,6 +14,8 @@ private:
   ifstream file;
   vector<vector<Tile>> contents;
   Dimensions dimensions;
+  Point ladder_pos;
+  string debug_msg;
   int moves;
 
 public:
@@ -27,7 +29,9 @@ public:
 
   const Dimensions get_dimensions() const;
   const Tile get_tile(int x, int y) const;
+  const Point get_ladder_position() const;
   void set_tile(int x, int y, const Tile &newTile);
+  void debug(string message);
 };
 
 #endif

@@ -11,25 +11,39 @@
 
 using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
-Scene::Scene(const char *map_path) : moves(0)
+Scene::Scene(const char *map_path) : moves(0), debug_msg("")
 {
   this->file.open(map_path);
-  string input;
-  unsigned long height = 0;
-  while (getline(file, input))
+  string line;
+
+  size_t y_coord = 0;
+  size_t map_width = 0;
+  while (getline(file, line))
   {
-    height++;
-    vector<char> line(input.begin(), input.end());
+    size_t x_coord = 0;
     vector<Tile> row;
+
+    if (map_width == 0 && !line.empty())
+    {
+      map_width = line.length();
+    }
 
     for (const char &c : line)
     {
-      row.push_back(static_cast<Tile>(c)); //! IMPORTANT: static cast
+      Tile tile = static_cast<Tile>(c); //! IMPORTANT: static cast
+      row.push_back(tile);
+
+      if (tile == Tile::LADDER)
+      {
+        this->ladder_pos = Point{int(x_coord), int(y_coord)};
+      }
+      x_coord++;
     }
 
     this->contents.push_back(row);
+    y_coord++;
   }
-  this->dimensions = Dimensions{input.length(), height};
+  this->dimensions = Dimensions{map_width, y_coord};
 
   Point tmp_pos = {0, 0};
 
@@ -84,12 +98,19 @@ void Scene::render()
       mvaddch(y, x, static_cast<char>(this->contents[y][x])); //! IMPORTANT: static cast
     }
   }
+
+  mvaddstr(this->dimensions.height + 2, this->dimensions.width / 2, this->debug_msg.c_str());
 }
 
 const Dimensions Scene::get_dimensions() const
 {
   return this->dimensions;
 };
+
+const Point Scene::get_ladder_position() const
+{
+  return this->ladder_pos;
+}
 
 const Tile Scene::get_tile(int x, int y) const
 {
@@ -109,4 +130,9 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
     throw out_of_range("set_tile: coordinates out of bounds");
   }
   this->contents[y][x] = newTile;
+}
+
+void Scene::debug(string message)
+{
+  this->debug_msg = message;
 }

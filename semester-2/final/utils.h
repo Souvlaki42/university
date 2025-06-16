@@ -32,7 +32,7 @@ typedef struct Point
 
 typedef struct Dimensions
 {
-  unsigned long width, height;
+  size_t width, height;
 } Dimensions;
 
 enum class Tile
