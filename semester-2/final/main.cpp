@@ -50,8 +50,7 @@ int main(int argc, char *argv[])
   leaveok(stdscr, true);   // Don't update cursor position
   scrollok(stdscr, false); // Disable scrolling
 
-  int ch = getch();
-  while (!scene.is_game_over(ch))
+  while (!scene.is_done())
   {
     erase();
 
@@ -67,8 +66,7 @@ int main(int argc, char *argv[])
 
     usleep(DELAY);
 
-    scene.increment_moves();
-    ch = getch();
+    scene.update();
   }
 
   endwin();

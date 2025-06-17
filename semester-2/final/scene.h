@@ -17,15 +17,16 @@ private:
   Point ladder_pos;
   string debug_msg;
   int moves;
+  GameState state;
 
 public:
   Scene(const char *map_path);
   ~Scene();
 
   const bool is_open() const;
-  const bool is_game_over(const char ch) const;
+  const bool is_done() const;
+  void update();
   void render();
-  void increment_moves();
 
   const Dimensions get_dimensions() const;
   const Tile get_tile(int x, int y) const;

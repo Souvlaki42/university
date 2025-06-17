@@ -6,16 +6,15 @@
 
 using std::copy_if, std::back_inserter, std::find;
 
-bool is_walkable(Tile t)
+bool is_walkable(Tile t, bool has_key)
 {
   return t == Tile::CORRIDOR || t == Tile::KEY || t == Tile::LADDER || (has_key && t == Tile::CAGE);
 }
 
-Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol)
+Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol), is_trapped(false), has_key(false)
 {
-  this->is_trapped = false;
-  this->key_position = Point{-1, -1};
-  this->trap_position = Point{-1, -1};
+  this->key_position = {-1, -1};
+  this->trap_position = {-1, -1};
   this->set_random_position();
 }
 
@@ -35,8 +34,8 @@ const vector<TileWithDirection> Character::look_around_from(Point from) const
 
   vector<TileWithDirection> valid_around;
   copy_if(around.begin(), around.end(), back_inserter(valid_around),
-          [](TileWithDirection &t)
-          { return is_walkable(t.tile); });
+          [this](TileWithDirection &t)
+          { return is_walkable(t.tile, this->has_key); });
 
   return valid_around;
 }
@@ -81,9 +80,15 @@ void Character::move()
     if (t.tile == Tile::KEY)
     {
       this->key_position = this->position + t.direction;
-      this->position.x += t.direction.x;
-      this->position.y += t.direction.y;
-      this->direction = t.direction;
+      Point new_direction = t.direction;
+      double option = double(random()) / RAND_MAX;
+      if (option <= 0.5)
+        new_direction = Point{-t.direction.x, -t.direction.y};
+      else
+        this->has_key = true;
+      this->position.x += new_direction.x;
+      this->position.y += new_direction.y;
+      this->direction = new_direction;
       this->visited.insert({this->position.x, this->position.y});
       return;
     }

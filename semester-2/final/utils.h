@@ -46,6 +46,14 @@ enum class Tile
   CAGE = 'C'
 };
 
+enum class GameState
+{
+  RUNNING,
+  WINNING,
+  LOSING,
+  DONE
+};
+
 typedef struct TileWithDirection
 {
   Tile tile;

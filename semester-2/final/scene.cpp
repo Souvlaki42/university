@@ -7,11 +7,11 @@
 #include "character.h"
 #include "scene.h"
 
-#define TERMINA 1000;
+#define TERMINA 1000
 
 using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
-Scene::Scene(const char *map_path) : moves(0), debug_msg("")
+Scene::Scene(const char *map_path) : moves(0), debug_msg(""), state(GameState::RUNNING)
 {
   this->file.open(map_path);
   string line;
@@ -79,14 +79,24 @@ const bool Scene::is_open() const
   return this->file.is_open();
 }
 
-const bool Scene::is_game_over(const char ch) const
+const bool Scene::is_done() const
 {
-  return ch == 'q' || this->moves > TERMINA;
+  return this->state == GameState::DONE;
 }
 
-void Scene::increment_moves()
+void Scene::update()
 {
   this->moves++;
+
+  if (getch() == 'q')
+  {
+    this->state = GameState::DONE;
+  }
+
+  if (this->moves > TERMINA)
+  {
+    this->state = GameState::LOSING;
+  }
 }
 
 void Scene::render()
@@ -127,7 +137,7 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
   if (y < 0 || y >= this->contents.size() ||
       x < 0 || x >= this->contents[y].size())
   {
-    throw out_of_range("set_tile: coordinates out of bounds");
+    throw out_of_range("Σφάλμα: Λάθος συντεταγμένες.");
   }
   this->contents[y][x] = newTile;
 }

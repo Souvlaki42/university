@@ -18,7 +18,7 @@ private:
   Point key_position;
 
   char symbol;
-  bool is_trapped;
+  bool is_trapped, has_key;
   class Scene &scene;
   const vector<TileWithDirection> look_around_from(Point from) const;
   set<Point> visited;
