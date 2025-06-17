@@ -79,9 +79,9 @@ const bool Scene::is_open() const
   return this->file.is_open();
 }
 
-const bool Scene::is_done() const
+const GameState Scene::get_state() const
 {
-  return this->state == GameState::DONE;
+  return this->state;
 }
 
 void Scene::update()
@@ -140,6 +140,11 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
     throw out_of_range("Σφάλμα: Λάθος συντεταγμένες.");
   }
   this->contents[y][x] = newTile;
+}
+
+void Scene::set_state(const GameState new_state)
+{
+  this->state = new_state;
 }
 
 void Scene::debug(string message)

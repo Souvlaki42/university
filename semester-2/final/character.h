@@ -14,7 +14,7 @@ class Character
 private:
   Point position;
   Point direction;
-  Point trap_position;
+  Point cage_position;
   Point key_position;
 
   char symbol;

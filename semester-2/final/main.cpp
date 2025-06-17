@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
   leaveok(stdscr, true);   // Don't update cursor position
   scrollok(stdscr, false); // Disable scrolling
 
-  while (!scene.is_done())
+  while (scene.get_state() != GameState::DONE)
   {
     erase();
 

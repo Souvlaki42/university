@@ -14,7 +14,7 @@ bool is_walkable(Tile t, bool has_key)
 Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol), is_trapped(false), has_key(false)
 {
   this->key_position = {-1, -1};
-  this->trap_position = {-1, -1};
+  this->cage_position = {-1, -1};
   this->set_random_position();
 }
 
@@ -85,12 +85,33 @@ void Character::move()
       if (option <= 0.5)
         new_direction = Point{-t.direction.x, -t.direction.y};
       else
-        this->has_key = true;
+      {
+        try
+        {
+          this->has_key = true;
+          this->scene.set_tile(this->key_position.x, this->key_position.y, Tile::CORRIDOR);
+        }
+        catch (const std::exception &e)
+        {
+          this->scene.debug(e.what());
+        }
+      }
       this->position.x += new_direction.x;
       this->position.y += new_direction.y;
       this->direction = new_direction;
       this->visited.insert({this->position.x, this->position.y});
       return;
+    }
+
+    if (t.tile == Tile::CAGE)
+    {
+      this->cage_position = this->position + t.direction;
+      this->position.x += t.direction.x;
+      this->position.y += t.direction.y;
+      this->direction = t.direction;
+      this->visited.insert({this->position.x, this->position.y});
+
+      this->scene.set_state(GameState::WINNING);
     }
 
     if (t.direction == this->direction)
@@ -135,10 +156,15 @@ void Character::move()
     {
       this->is_trapped = true;
       this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
+      if (this->has_key)
+      {
+        this->scene.set_state(GameState::LOSING);
+      }
     }
     catch (const std::out_of_range &e)
     {
       this->is_trapped = false;
+      this->scene.debug(e.what());
     }
   }
 }
@@ -211,6 +237,7 @@ void Character::move_to(int target_x, int target_y)
       catch (const std::out_of_range &e)
       {
         this->is_trapped = false;
+        this->scene.debug(e.what());
       }
   }
 }
