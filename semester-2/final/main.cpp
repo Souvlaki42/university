@@ -34,8 +34,9 @@ int main(int argc, char *argv[])
   Character grigorakis = Character(scene, 'G');
   Character asimenia = Character(scene, 'S');
 
-  while (abs(asimenia.get_position().x - grigorakis.get_position().x) < 7 &&
-         abs(asimenia.get_position().y - grigorakis.get_position().y) < 7)
+  while ((scene.get_tile(grigorakis.get_position().x, grigorakis.get_position().y) != Tile::CORRIDOR) ||
+         (scene.get_tile(asimenia.get_position().x, asimenia.get_position().y) != Tile::CORRIDOR) ||
+         (abs(asimenia.get_position().x - grigorakis.get_position().x) < 7 && abs(asimenia.get_position().y - grigorakis.get_position().y) < 7))
   {
     asimenia.set_random_position();
     grigorakis.set_random_position();
@@ -60,6 +61,11 @@ int main(int argc, char *argv[])
 
     grigorakis.move();
     asimenia.move();
+
+    if (grigorakis.get_position() == asimenia.get_position())
+    {
+      scene.set_state(GameState::WINNING);
+    }
 
     wnoutrefresh(stdscr);
     doupdate();

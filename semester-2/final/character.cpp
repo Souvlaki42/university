@@ -106,12 +106,18 @@ void Character::move()
     if (t.tile == Tile::CAGE)
     {
       this->cage_position = this->position + t.direction;
-      this->position.x += t.direction.x;
-      this->position.y += t.direction.y;
-      this->direction = t.direction;
-      this->visited.insert({this->position.x, this->position.y});
-
-      this->scene.set_state(GameState::WINNING);
+      if (has_key)
+      {
+        this->position.x += t.direction.x;
+        this->position.y += t.direction.y;
+        this->direction = t.direction;
+        this->visited.insert({this->position.x, this->position.y});
+        this->scene.set_state(GameState::WINNING);
+      }
+      else if (key_position != Point{-1, -1})
+      {
+        // todo: go pickup the key and come back using move_to() calls
+      }
     }
 
     if (t.direction == this->direction)
