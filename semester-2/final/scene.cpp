@@ -154,8 +154,31 @@ void Scene::set_state(const GameState new_state)
   if (this->state == GameState::WINNING || new_state == GameState::WINNING)
   {
     this->winning = true;
+    this->clear_maze();
   }
   this->state = new_state;
+}
+
+void Scene::clear_maze()
+{
+  try
+  {
+    for (size_t y = 0; y < this->contents.size(); ++y)
+    {
+      for (size_t x = 0; x < this->contents[y].size(); ++x)
+      {
+        const Tile tile = this->contents[y][x];
+        if (tile == Tile::CAGE || tile == Tile::TRAP || tile == Tile::WALL)
+        {
+          this->set_tile(x, y, Tile::CORRIDOR);
+        }
+      }
+    }
+  }
+  catch (const std::exception &e)
+  {
+    this->debug(e.what());
+  }
 }
 
 void Scene::debug(string message)

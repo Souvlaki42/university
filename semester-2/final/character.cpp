@@ -187,8 +187,6 @@ void Character::move()
   }
   else
   {
-    // --- MOVEMENT FIX: Smarter Backtracking ---
-    // All adjacent tiles have been visited. Avoid immediately reversing direction.
     vector<TileWithDirection> backtracking_options;
     Point opposite_direction = {-this->direction.x, -this->direction.y};
 
@@ -256,7 +254,7 @@ void Character::move_to(int target_x, int target_y)
     if (current == goal)
       break;
 
-    for (const auto &next : this->look_around_from(current))
+    for (const TileWithDirection &next : this->look_around_from(current))
     {
       Point neighbor = {current.x + next.direction.x, current.y + next.direction.y};
       if (visited_bfs.find(neighbor) == visited_bfs.end())

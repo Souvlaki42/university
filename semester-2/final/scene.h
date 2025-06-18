@@ -19,6 +19,7 @@ private:
   int moves;
   bool winning;
   GameState state;
+  void clear_maze();
 
 public:
   Scene(const char *map_path);

@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
   keypad(stdscr, true);
   nodelay(stdscr, true);
   curs_set(0);
-  leaveok(stdscr, true);   // Don't update cursor position
-  scrollok(stdscr, false); // Disable scrolling
+  leaveok(stdscr, true);
+  scrollok(stdscr, false);
 
   while (scene.get_state() != GameState::DONE)
   {
@@ -59,9 +59,20 @@ int main(int argc, char *argv[])
     grigorakis.update();
     asimenia.update();
 
-    if (grigorakis.get_position() == asimenia.get_position())
+    Point pos1 = grigorakis.get_position();
+    Point pos2 = asimenia.get_position();
+
+    int dx = abs(pos1.x - pos2.x);
+    int dy = abs(pos1.y - pos2.y);
+
+    if (dx <= 1 && dy <= 1)
     {
       scene.set_state(GameState::WINNING);
+    }
+
+    if (pos1 == pos2 && pos2 == scene.get_ladder_position())
+    {
+      scene.set_state(GameState::DONE);
     }
 
     wnoutrefresh(stdscr);
