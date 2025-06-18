@@ -15,6 +15,8 @@ Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol), 
   this->key_position = {-1, -1};
   this->cage_position = {-1, -1};
   this->set_random_position();
+  this->visited.insert(this->position);
+  this->direction = {1, 0};
 }
 
 const vector<TileWithDirection> Character::look_around_from(Point from) const
@@ -74,6 +76,19 @@ void Character::set_trapped(const bool trapped)
 
 void Character::update(Character &partner)
 {
+  if (partner.get_position() == this->position && this->is_trapped() && partner.has_key)
+  {
+    this->set_trapped(false);
+    this->scene.set_tile(this->position.x, this->position.y, Tile::CORRIDOR);
+    this->scene.set_winning(true);
+    return;
+  }
+
+  if (this->is_trapped())
+  {
+    return;
+  }
+
   if (this->position == this->scene.get_ladder_position())
   {
     return;
@@ -84,6 +99,12 @@ void Character::update(Character &partner)
     Point ladder_pos = this->scene.get_ladder_position();
     this->move_to(ladder_pos.x, ladder_pos.y);
     return;
+  }
+
+  if (partner.is_trapped() && this->has_key && this->state != State::GOING_TO_CAGE)
+  {
+    this->state = State::GOING_TO_CAGE;
+    this->cage_position = partner.get_position();
   }
 
   if (this->state == State::FETCHING_KEY)
@@ -102,7 +123,7 @@ void Character::update(Character &partner)
     return;
   }
 
-  this->move(partner);
+  this->move();
 }
 
 void Character::perform_move(const Point new_position, const Point new_direction)
@@ -113,25 +134,17 @@ void Character::perform_move(const Point new_position, const Point new_direction
 
   if (this->scene.get_tile(this->position.x, this->position.y) == Tile::TRAP)
   {
-    try
+    this->trapped = true;
+    this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
+    if (this->has_key)
     {
-      this->trapped = true;
-      this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
-      if (this->has_key)
-      {
-        this->scene.set_winning(false);
-        this->scene.set_running(false);
-      }
-    }
-    catch (const out_of_range &e)
-    {
-      this->trapped = false;
-      this->scene.debug(e.what());
+      this->scene.set_winning(false);
+      this->scene.set_running(false);
     }
   }
 }
 
-void Character::move(Character &partner)
+void Character::move()
 {
   if (this->trapped)
     return;
@@ -143,7 +156,6 @@ void Character::move(Character &partner)
   {
     if (t.tile == Tile::KEY)
     {
-      this->key_position = this->position + t.direction;
       Point new_direction = t.direction;
       double option = double(random()) / RAND_MAX;
       if (option <= 0.5)
@@ -161,25 +173,9 @@ void Character::move(Character &partner)
         }
       }
       this->perform_move(this->position + new_direction, new_direction);
-      return;
-    }
-
-    if (t.tile == Tile::CAGE)
-    {
-      this->cage_position = this->position + t.direction;
-      if (has_key)
-      {
-        this->perform_move(this->cage_position, t.direction);
-        partner.set_trapped(false);
-        return;
-      }
-      else if (key_position != Point{-1, -1})
-      {
-        this->state = State::FETCHING_KEY;
-        return;
-      }
     }
   }
+
   for (const TileWithDirection &t : around)
   {
     if (t.direction == this->direction)
@@ -202,7 +198,6 @@ void Character::move(Character &partner)
       non_visited.push_back(t);
     }
   }
-
   if (!non_visited.empty())
   {
     int random_index = random() % non_visited.size();
@@ -214,7 +209,6 @@ void Character::move(Character &partner)
   {
     vector<TileWithDirection> backtracking_options;
     Point opposite_direction = {-this->direction.x, -this->direction.y};
-
     for (const TileWithDirection &t : around)
     {
       if (t.direction != opposite_direction)
@@ -229,13 +223,10 @@ void Character::move(Character &partner)
       Point new_direction = backtracking_options[random_index].direction;
       this->perform_move(this->position + new_direction, new_direction);
     }
-    else
+    else if (!around.empty())
     {
-      if (!around.empty())
-      {
-        Point new_direction = around[0].direction;
-        this->perform_move(this->position + new_direction, new_direction);
-      }
+      Point new_direction = around[0].direction;
+      this->perform_move(this->position + new_direction, new_direction);
     }
   }
 }
@@ -244,7 +235,6 @@ void Character::move_to(int target_x, int target_y)
 {
   Point start = this->position;
   Point goal = {target_x, target_y};
-
   if (start == goal)
     return;
 
@@ -285,29 +275,25 @@ void Character::move_to(int target_x, int target_y)
   if (!path.empty())
   {
     Point next_step = path.back();
-    this->direction = {next_step.x - this->position.x, next_step.y - this->position.y};
-    this->position = next_step;
-    this->visited.insert(next_step);
+    Point new_direction = {next_step.x - start.x, next_step.y - start.y};
 
-    Tile landed_tile = this->scene.get_tile(next_step.x, next_step.y);
-    if (landed_tile == Tile::KEY)
+    this->perform_move(next_step, new_direction);
+
+    if (this->scene.get_tile(this->position.x, this->position.y) == Tile::KEY)
     {
-      this->has_key = true;
-      this->scene.set_tile(this->position.x, this->position.y, Tile::CORRIDOR);
-    }
-    else if (landed_tile == Tile::TRAP)
-    {
-      this->trapped = true;
-      this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
-      if (this->has_key)
+      double option = double(random()) / RAND_MAX;
+      if (option > 0.5)
       {
-        this->scene.set_winning(false);
-        this->scene.set_running(false);
+        try
+        {
+          this->has_key = true;
+          this->scene.set_tile(this->position.x, this->position.y, Tile::CORRIDOR);
+        }
+        catch (const exception &e)
+        {
+          this->scene.debug(e.what());
+        }
       }
-    }
-    else if (landed_tile == Tile::CAGE && this->has_key)
-    {
-      this->scene.set_winning(true);
     }
   }
 }

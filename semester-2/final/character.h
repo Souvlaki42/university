@@ -17,7 +17,7 @@ enum class State
 };
 class Character
 {
-private:
+public:
   Point position;
   Point direction;
   Point cage_position;
@@ -28,7 +28,7 @@ private:
   bool trapped, has_key;
   class Scene &scene;
   const vector<TileWithDirection> look_around_from(Point from) const;
-  void move(Character &partner);
+  void move();
   void move_to(int x, int y);
   void perform_move(const Point new_position, const Point new_direction);
   set<Point> visited;
