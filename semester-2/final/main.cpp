@@ -2,9 +2,6 @@
 #include <unistd.h>
 #include "scene.h"
 #include "character.h"
-#include <cstdlib>
-#include <ctime>
-#include <cmath>
 #include <iostream>
 #include <string>
 

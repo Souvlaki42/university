@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm>
 
-using std::copy_if, std::back_inserter, std::find;
+using std::copy_if, std::back_inserter, std::find, std::queue, std::set, std::map, std::exception, std::out_of_range;
 
 bool is_walkable(Tile t, bool has_key)
 {
@@ -111,7 +111,7 @@ void Character::move()
     return;
   }
 
-  for (TileWithDirection &t : around)
+  for (const TileWithDirection &t : around)
   {
     if (t.tile == Tile::KEY)
     {
@@ -127,7 +127,7 @@ void Character::move()
           this->has_key = true;
           this->scene.set_tile(this->key_position.x, this->key_position.y, Tile::CORRIDOR);
         }
-        catch (const std::exception &e)
+        catch (const exception &e)
         {
           this->scene.debug(e.what());
         }
@@ -144,26 +144,28 @@ void Character::move()
       this->cage_position = this->position + t.direction;
       if (has_key)
       {
-        this->position.x += t.direction.x;
-        this->position.y += t.direction.y;
+        this->position += t.direction;
         this->direction = t.direction;
-        this->visited.insert({this->position.x, this->position.y});
+        this->visited.insert(this->position);
         this->scene.set_state(GameState::WINNING);
+        return;
       }
       else if (key_position != Point{-1, -1})
       {
-        this->state == State::FETCHING_KEY;
+        this->state = State::FETCHING_KEY;
         return;
       }
     }
+  }
 
+  for (const TileWithDirection &t : around)
+  {
     if (t.direction == this->direction)
     {
-      Point new_pos = {this->position.x + t.direction.x, this->position.y + t.direction.y};
+      Point new_pos = this->position + t.direction;
       if (this->visited.find(new_pos) == this->visited.end())
       {
         this->position = new_pos;
-        this->direction = t.direction;
         this->visited.insert(new_pos);
         return;
       }
@@ -171,26 +173,45 @@ void Character::move()
   }
 
   vector<TileWithDirection> non_visited;
-  copy_if(around.begin(), around.end(), back_inserter(non_visited), [this](TileWithDirection &t)
+  copy_if(around.begin(), around.end(), back_inserter(non_visited), [this](const TileWithDirection &t)
           {
-    Point new_pos = {this->position.x + t.direction.x, this->position.y + t.direction.y};
+    Point new_pos = this->position + t.direction;
     return this->visited.find(new_pos) == this->visited.end(); });
 
-  if (non_visited.empty())
+  if (!non_visited.empty())
   {
-    int random_index = random() % around.size();
-    this->position.x += around[random_index].direction.x;
-    this->position.y += around[random_index].direction.y;
-    this->direction = around[random_index].direction;
-    this->visited.insert({this->position.x, this->position.y});
+    int random_index = random() % non_visited.size();
+    this->position += non_visited[random_index].direction;
+    this->direction = non_visited[random_index].direction;
+    this->visited.insert(this->position);
   }
   else
   {
-    int random_index = random() % non_visited.size();
-    this->position.x += non_visited[random_index].direction.x;
-    this->position.y += non_visited[random_index].direction.y;
-    this->direction = non_visited[random_index].direction;
-    this->visited.insert({this->position.x, this->position.y});
+    // --- MOVEMENT FIX: Smarter Backtracking ---
+    // All adjacent tiles have been visited. Avoid immediately reversing direction.
+    vector<TileWithDirection> backtracking_options;
+    Point opposite_direction = {-this->direction.x, -this->direction.y};
+
+    copy_if(around.begin(), around.end(), back_inserter(backtracking_options),
+            [&](const TileWithDirection &t)
+            {
+              return t.direction != opposite_direction;
+            });
+
+    if (!backtracking_options.empty())
+    {
+      int random_index = random() % backtracking_options.size();
+      this->position += backtracking_options[random_index].direction;
+      this->direction = backtracking_options[random_index].direction;
+    }
+    else
+    {
+      if (!around.empty())
+      {
+        this->position += around[0].direction;
+        this->direction = around[0].direction;
+      }
+    }
   }
 
   if (this->scene.get_tile(this->position.x, this->position.y) == Tile::TRAP)
@@ -204,7 +225,7 @@ void Character::move()
         this->scene.set_state(GameState::LOSING);
       }
     }
-    catch (const std::out_of_range &e)
+    catch (const out_of_range &e)
     {
       this->is_trapped = false;
       this->scene.debug(e.what());
@@ -220,9 +241,9 @@ void Character::move_to(int target_x, int target_y)
   if (start == goal)
     return;
 
-  std::queue<Point> frontier;
-  std::map<Point, Point> came_from;
-  std::set<Point> visited_bfs;
+  queue<Point> frontier;
+  map<Point, Point> came_from;
+  set<Point> visited_bfs;
 
   frontier.push(start);
   visited_bfs.insert(start);
@@ -248,16 +269,16 @@ void Character::move_to(int target_x, int target_y)
   }
 
   if (came_from.find(goal) == came_from.end())
-    return; // No path found
+    return;
 
-  std::vector<Point> path;
+  vector<Point> path;
   Point current = goal;
   while (current != start)
   {
     path.push_back(current);
     current = came_from.at(current);
   }
-  std::reverse(path.begin(), path.end());
+  reverse(path.begin(), path.end());
 
   if (!path.empty())
   {
@@ -266,26 +287,24 @@ void Character::move_to(int target_x, int target_y)
     this->position = next_step;
     this->visited.insert(next_step);
 
-    // After moving, correctly process the tile the character landed on.
     Tile landed_tile = this->scene.get_tile(next_step.x, next_step.y);
     if (landed_tile == Tile::KEY)
     {
       this->has_key = true;
-      // Erase the key from the map so it can't be picked up again
       this->scene.set_tile(this->position.x, this->position.y, Tile::CORRIDOR);
     }
     else if (landed_tile == Tile::TRAP)
     {
-      try
+      this->is_trapped = true;
+      this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
+      if (this->has_key)
       {
-        this->is_trapped = true;
-        this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
+        this->scene.set_state(GameState::LOSING);
       }
-      catch (const std::out_of_range &e)
-      {
-        this->is_trapped = false;
-        this->scene.debug(e.what());
-      }
+    }
+    else if (landed_tile == Tile::CAGE && this->has_key)
+    {
+      this->scene.set_state(GameState::WINNING);
     }
   }
 }
