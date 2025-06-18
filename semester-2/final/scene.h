@@ -18,7 +18,7 @@ private:
   string debug_msg;
   int moves;
   bool winning;
-  GameState state;
+  bool running;
   void clear_maze();
 
 public:
@@ -26,18 +26,20 @@ public:
   ~Scene();
 
   const bool is_open() const;
+  const bool is_winning() const;
+  const bool is_running() const;
 
   void update();
   void render();
   void debug(string message);
 
-  const GameState get_state() const;
   const Dimensions get_dimensions() const;
   const Tile get_tile(int x, int y) const;
   const Point get_ladder_position() const;
 
   void set_tile(int x, int y, const Tile &newTile);
-  void set_state(const GameState new_state);
+  void set_winning(const bool winning);
+  void set_running(const bool running);
 };
 
 #endif

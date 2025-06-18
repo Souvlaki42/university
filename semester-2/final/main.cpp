@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
   leaveok(stdscr, true);
   scrollok(stdscr, false);
 
-  while (scene.get_state() != GameState::DONE)
+  while (scene.is_running())
   {
     erase();
 
@@ -67,12 +67,12 @@ int main(int argc, char *argv[])
 
     if (dx <= 1 && dy <= 1)
     {
-      scene.set_state(GameState::WINNING);
+      scene.set_winning(true);
     }
 
     if (pos1 == pos2 && pos2 == scene.get_ladder_position())
     {
-      scene.set_state(GameState::DONE);
+      scene.set_running(false);
       scene.render();
       asimenia.render();
       grigorakis.render();

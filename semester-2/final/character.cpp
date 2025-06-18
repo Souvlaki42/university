@@ -69,7 +69,7 @@ void Character::update()
     return;
   }
 
-  if (this->scene.get_state() == GameState::WINNING)
+  if (this->scene.is_winning())
   {
     Point ladder_pos = this->scene.get_ladder_position();
     this->move_to(ladder_pos.x, ladder_pos.y);
@@ -214,7 +214,8 @@ void Character::move()
       this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
       if (this->has_key)
       {
-        this->scene.set_state(GameState::LOSING);
+        this->scene.set_winning(false);
+        this->scene.set_running(false);
       }
     }
     catch (const out_of_range &e)
@@ -286,12 +287,13 @@ void Character::move_to(int target_x, int target_y)
       this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
       if (this->has_key)
       {
-        this->scene.set_state(GameState::LOSING);
+        this->scene.set_winning(false);
+        this->scene.set_running(false);
       }
     }
     else if (landed_tile == Tile::CAGE && this->has_key)
     {
-      this->scene.set_state(GameState::WINNING);
+      this->scene.set_winning(true);
     }
   }
 }

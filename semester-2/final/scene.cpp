@@ -7,11 +7,11 @@
 #include "character.h"
 #include "scene.h"
 
-#define TERMINA 1000
+#define TERMINA 20
 
 using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
-Scene::Scene(const char *map_path) : moves(0), debug_msg(""), state(GameState::RUNNING), winning(false)
+Scene::Scene(const char *map_path) : moves(0), debug_msg(""), running(true), winning(false)
 {
   this->file.open(map_path);
   string line;
@@ -86,23 +86,22 @@ const bool Scene::is_open() const
   return this->file.is_open();
 }
 
-const GameState Scene::get_state() const
+const bool Scene::is_winning() const
 {
-  return this->state;
+  return this->winning;
+}
+
+const bool Scene::is_running() const
+{
+  return this->running;
 }
 
 void Scene::update()
 {
   this->moves++;
-
-  if (getch() == 'q')
+  if (getch() == 'q' || this->moves >= TERMINA)
   {
-    this->set_state(GameState::DONE);
-  }
-
-  if (this->moves > TERMINA)
-  {
-    this->set_state(GameState::LOSING);
+    this->set_running(false);
   }
 }
 
@@ -149,14 +148,19 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
   this->contents[y][x] = newTile;
 }
 
-void Scene::set_state(const GameState new_state)
+void Scene::set_winning(const bool winning)
 {
-  if (this->state == GameState::WINNING || new_state == GameState::WINNING)
+  if (this->winning || winning)
   {
-    this->winning = true;
     this->clear_maze();
   }
-  this->state = new_state;
+
+  this->winning = winning;
+}
+
+void Scene::set_running(const bool running)
+{
+  this->running = running;
 }
 
 void Scene::clear_maze()
