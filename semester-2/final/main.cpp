@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
     grigorakis.render();
     asimenia.render();
 
-    grigorakis.update();
-    asimenia.update();
+    grigorakis.update(asimenia);
+    asimenia.update(grigorakis);
 
     const Point pos1 = grigorakis.get_position();
     const Point pos2 = asimenia.get_position();

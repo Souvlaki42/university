@@ -67,7 +67,12 @@ void Character::set_random_position()
   this->position = tmp_pos;
 }
 
-void Character::update()
+void Character::set_trapped(const bool trapped)
+{
+  this->trapped = trapped;
+}
+
+void Character::update(Character &partner)
 {
   if (this->position == this->scene.get_ladder_position())
   {
@@ -97,7 +102,7 @@ void Character::update()
     return;
   }
 
-  this->move();
+  this->move(partner);
 }
 
 void Character::perform_move(const Point new_position, const Point new_direction)
@@ -126,7 +131,7 @@ void Character::perform_move(const Point new_position, const Point new_direction
   }
 }
 
-void Character::move()
+void Character::move(Character &partner)
 {
   if (this->trapped)
     return;
@@ -165,6 +170,7 @@ void Character::move()
       if (has_key)
       {
         this->perform_move(this->cage_position, t.direction);
+        partner.set_trapped(false);
         return;
       }
       else if (key_position != Point{-1, -1})
