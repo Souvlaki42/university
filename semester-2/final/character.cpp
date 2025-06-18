@@ -11,7 +11,7 @@ bool is_walkable(Tile t, bool has_key)
   return t == Tile::CORRIDOR || t == Tile::KEY || t == Tile::LADDER || (has_key && t == Tile::CAGE);
 }
 
-Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol), is_trapped(false), has_key(false)
+Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol), is_trapped(false), has_key(false), state(State::EXPLORING)
 {
   this->key_position = {-1, -1};
   this->cage_position = {-1, -1};
@@ -62,6 +62,42 @@ void Character::set_random_position()
   }
 
   this->position = tmp_pos;
+}
+
+void Character::update()
+{
+  if (this->scene.get_state() == GameState::WINNING)
+  {
+    Point ladder_pos = this->scene.get_ladder_position();
+    this->move_to(ladder_pos.x, ladder_pos.y);
+    if (this->position == ladder_pos)
+    {
+      this->scene.set_state(GameState::DONE);
+    }
+  }
+
+  if (this->state == State::FETCHING_KEY)
+  {
+    this->move_to(this->key_position.x, this->key_position.y);
+    if (this->has_key)
+    {
+      this->state = State::GOING_TO_CAGE;
+    }
+    return;
+  }
+
+  if (this->state == State::GOING_TO_CAGE)
+  {
+    this->move_to(this->cage_position.x, this->cage_position.y);
+    if (this->position == this->cage_position)
+    {
+      this->scene.set_state(GameState::WINNING);
+      this->state = State::EXPLORING;
+    }
+    return;
+  }
+
+  this->move();
 }
 
 void Character::move()
@@ -116,7 +152,8 @@ void Character::move()
       }
       else if (key_position != Point{-1, -1})
       {
-        // todo: go pickup the key and come back using move_to() calls
+        this->state == State::FETCHING_KEY;
+        return;
       }
     }
 
@@ -185,10 +222,10 @@ void Character::move_to(int target_x, int target_y)
 
   std::queue<Point> frontier;
   std::map<Point, Point> came_from;
-  std::set<Point> visited;
+  std::set<Point> visited_bfs;
 
   frontier.push(start);
-  visited.insert(start);
+  visited_bfs.insert(start);
 
   while (!frontier.empty())
   {
@@ -201,26 +238,24 @@ void Character::move_to(int target_x, int target_y)
     for (const auto &next : this->look_around_from(current))
     {
       Point neighbor = {current.x + next.direction.x, current.y + next.direction.y};
-      if (visited.find(neighbor) == visited.end())
+      if (visited_bfs.find(neighbor) == visited_bfs.end())
       {
         frontier.push(neighbor);
-        visited.insert(neighbor);
+        visited_bfs.insert(neighbor);
         came_from[neighbor] = current;
       }
     }
   }
 
-  // No path
   if (came_from.find(goal) == came_from.end())
-    return;
+    return; // No path found
 
-  // Reconstruct path to goal
   std::vector<Point> path;
   Point current = goal;
   while (current != start)
   {
     path.push_back(current);
-    current = came_from[current];
+    current = came_from.at(current);
   }
   std::reverse(path.begin(), path.end());
 
@@ -231,10 +266,16 @@ void Character::move_to(int target_x, int target_y)
     this->position = next_step;
     this->visited.insert(next_step);
 
-    Tile t = this->scene.get_tile(next_step.x, next_step.y);
-    if (t == Tile::KEY)
-      this->key_position = Point{next_step.x, next_step.y};
-    if (t == Tile::TRAP)
+    // After moving, correctly process the tile the character landed on.
+    Tile landed_tile = this->scene.get_tile(next_step.x, next_step.y);
+    if (landed_tile == Tile::KEY)
+    {
+      this->has_key = true;
+      // Erase the key from the map so it can't be picked up again
+      this->scene.set_tile(this->position.x, this->position.y, Tile::CORRIDOR);
+    }
+    else if (landed_tile == Tile::TRAP)
+    {
       try
       {
         this->is_trapped = true;
@@ -245,5 +286,6 @@ void Character::move_to(int target_x, int target_y)
         this->is_trapped = false;
         this->scene.debug(e.what());
       }
+    }
   }
 }

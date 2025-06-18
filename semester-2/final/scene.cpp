@@ -11,7 +11,7 @@
 
 using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
-Scene::Scene(const char *map_path) : moves(0), debug_msg(""), state(GameState::RUNNING)
+Scene::Scene(const char *map_path) : moves(0), debug_msg(""), state(GameState::RUNNING), winning(false)
 {
   this->file.open(map_path);
   string line;
@@ -71,7 +71,14 @@ Scene::Scene(const char *map_path) : moves(0), debug_msg(""), state(GameState::R
 
 Scene::~Scene()
 {
-  this->file.close();
+  if (this->winning)
+  {
+    cout << "Τελικά βρεθήκαν οι χαρακτήρες και το βασίλειο σώθηκε. Πέρασαν " << this->moves << " τέρμινα.\n";
+  }
+  else
+  {
+    cout << "Τελικά δεν βρεθήκαν οι χαρακτήρες και το βασίλειο χάθηκε. Πέρασαν " << this->moves << " τέρμινα.\n";
+  }
 }
 
 const bool Scene::is_open() const
@@ -90,12 +97,12 @@ void Scene::update()
 
   if (getch() == 'q')
   {
-    this->state = GameState::DONE;
+    this->set_state(GameState::DONE);
   }
 
   if (this->moves > TERMINA)
   {
-    this->state = GameState::LOSING;
+    this->set_state(GameState::LOSING);
   }
 }
 
@@ -144,6 +151,10 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
 
 void Scene::set_state(const GameState new_state)
 {
+  if (this->state == GameState::WINNING || new_state == GameState::WINNING)
+  {
+    this->winning = true;
+  }
   this->state = new_state;
 }
 

@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
     grigorakis.render();
     asimenia.render();
 
-    grigorakis.move();
-    asimenia.move();
+    grigorakis.update();
+    asimenia.update();
 
     if (grigorakis.get_position() == asimenia.get_position())
     {

@@ -17,6 +17,7 @@ private:
   Point ladder_pos;
   string debug_msg;
   int moves;
+  bool winning;
   GameState state;
 
 public:
