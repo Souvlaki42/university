@@ -25,11 +25,12 @@ private:
   State state;
 
   char symbol;
-  bool is_trapped, has_key;
+  bool trapped, has_key;
   class Scene &scene;
   const vector<TileWithDirection> look_around_from(Point from) const;
   void move();
   void move_to(int x, int y);
+  void perform_move(const Point new_position, const Point new_direction);
   set<Point> visited;
 
 public:
@@ -37,6 +38,7 @@ public:
   void update();
   void render();
   const Point get_position() const;
+  const bool is_trapped() const;
   void set_random_position();
 };
 

@@ -59,18 +59,21 @@ int main(int argc, char *argv[])
     grigorakis.update();
     asimenia.update();
 
-    Point pos1 = grigorakis.get_position();
-    Point pos2 = asimenia.get_position();
+    const Point pos1 = grigorakis.get_position();
+    const Point pos2 = asimenia.get_position();
+
+    const bool trapped1 = grigorakis.is_trapped();
+    const bool trapped2 = asimenia.is_trapped();
 
     int dx = abs(pos1.x - pos2.x);
     int dy = abs(pos1.y - pos2.y);
 
-    if (dx <= 1 && dy <= 1)
+    if (!trapped1 && !trapped2 && dx <= 1 && dy <= 1)
     {
       scene.set_winning(true);
     }
 
-    if (pos1 == pos2 && pos2 == scene.get_ladder_position())
+    if (!trapped1 && !trapped2 && pos1 == pos2 && pos2 == scene.get_ladder_position())
     {
       scene.set_running(false);
       scene.render();
