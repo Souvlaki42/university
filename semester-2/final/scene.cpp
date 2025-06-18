@@ -7,7 +7,7 @@
 #include "character.h"
 #include "scene.h"
 
-#define TERMINA 20
+#define TERMINA 1000
 
 using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
@@ -101,6 +101,7 @@ void Scene::update()
   this->moves++;
   if (getch() == 'q' || this->moves >= TERMINA)
   {
+    this->set_winning(false);
     this->set_running(false);
   }
 }
@@ -150,7 +151,7 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
 
 void Scene::set_winning(const bool winning)
 {
-  if (this->winning || winning)
+  if (winning)
   {
     this->clear_maze();
   }
