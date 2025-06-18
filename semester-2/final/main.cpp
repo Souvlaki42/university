@@ -73,6 +73,9 @@ int main(int argc, char *argv[])
     if (pos1 == pos2 && pos2 == scene.get_ladder_position())
     {
       scene.set_state(GameState::DONE);
+      scene.render();
+      asimenia.render();
+      grigorakis.render();
     }
 
     wnoutrefresh(stdscr);
