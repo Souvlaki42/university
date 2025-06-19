@@ -81,6 +81,12 @@ int main(int argc, char *argv[])
       grigorakis.render();
     }
 
+    if (trapped1 && trapped2)
+    {
+      scene.set_winning(false);
+      scene.set_running(false);
+    }
+
     wnoutrefresh(stdscr);
     doupdate();
 

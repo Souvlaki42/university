@@ -169,7 +169,25 @@ void Character::move()
 
       double option = double(random()) / RAND_MAX;
       if (option <= 0.5)
-        move_direction = {-t.direction.x, -t.direction.y};
+      {
+        vector<TileWithDirection> away_options;
+        for (const auto &opt : around)
+        {
+          if (opt.direction != t.direction)
+          {
+            away_options.push_back(opt);
+          }
+        }
+        if (!away_options.empty())
+        {
+          int idx = random() % away_options.size();
+          move_direction = away_options[idx].direction;
+        }
+        else
+        {
+          move_direction = {-t.direction.x, -t.direction.y};
+        }
+      }
       else
       {
         this->has_key = true;
