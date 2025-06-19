@@ -14,8 +14,6 @@ Character::Character(Scene &scene, char symbol) : scene(scene), symbol(symbol), 
 {
   this->key_position = {-1, -1};
   this->cage_position = {-1, -1};
-  this->set_random_position();
-  this->visited.insert(this->position);
   this->direction = {1, 0};
 }
 
@@ -67,6 +65,7 @@ void Character::set_random_position()
     tmp_pos.y = random() % dimensions.height;
   }
   this->position = tmp_pos;
+  this->visited.insert(tmp_pos);
 }
 
 void Character::set_trapped(const bool trapped)
@@ -76,14 +75,6 @@ void Character::set_trapped(const bool trapped)
 
 void Character::update(Character &partner)
 {
-  if (partner.get_position() == this->position && this->is_trapped() && partner.has_key)
-  {
-    this->set_trapped(false);
-    this->scene.set_tile(this->position.x, this->position.y, Tile::CORRIDOR);
-    this->scene.set_winning(true);
-    return;
-  }
-
   if (this->is_trapped())
   {
     return;
@@ -101,17 +92,26 @@ void Character::update(Character &partner)
     return;
   }
 
-  if (partner.is_trapped() && this->has_key && this->state != State::GOING_TO_CAGE)
+  const Point partner_pos = partner.get_position();
+  const int dx = abs(this->position.x - partner_pos.x);
+  const int dy = abs(this->position.y - partner_pos.y);
+  const bool are_adjacent = (dx <= 1 && dy <= 1);
+
+  if (are_adjacent && partner.is_trapped() && this->has_key)
   {
     this->state = State::GOING_TO_CAGE;
-    this->cage_position = partner.get_position();
+    this->cage_position = partner_pos;
+    this->move_to(this->cage_position.x, this->cage_position.y);
+    return;
   }
 
   if (this->state == State::FETCHING_KEY)
   {
     this->move_to(this->key_position.x, this->key_position.y);
-    if (this->has_key)
+    if (this->position == this->key_position)
     {
+      this->has_key = true;
+      this->scene.set_tile(this->position.x, this->position.y, Tile::CORRIDOR);
       this->state = State::GOING_TO_CAGE;
     }
     return;
@@ -120,6 +120,12 @@ void Character::update(Character &partner)
   if (this->state == State::GOING_TO_CAGE)
   {
     this->move_to(this->cage_position.x, this->cage_position.y);
+    if (this->position == this->cage_position && partner.is_trapped() && this->has_key)
+    {
+      partner.set_trapped(false);
+      this->scene.set_tile(this->position.x, this->position.y, Tile::CORRIDOR);
+      this->scene.set_winning(true);
+    }
     return;
   }
 
@@ -132,7 +138,9 @@ void Character::perform_move(const Point new_position, const Point new_direction
   this->direction = new_direction;
   this->visited.insert(this->position);
 
-  if (this->scene.get_tile(this->position.x, this->position.y) == Tile::TRAP)
+  Tile landed_tile = this->scene.get_tile(this->position.x, this->position.y);
+
+  if (landed_tile == Tile::TRAP)
   {
     this->trapped = true;
     this->scene.set_tile(this->position.x, this->position.y, Tile::CAGE);
@@ -156,23 +164,32 @@ void Character::move()
   {
     if (t.tile == Tile::KEY)
     {
-      Point new_direction = t.direction;
+      this->key_position = this->position + t.direction;
+      Point move_direction = t.direction;
+
       double option = double(random()) / RAND_MAX;
       if (option <= 0.5)
-        new_direction = Point{-t.direction.x, -t.direction.y};
+        move_direction = {-t.direction.x, -t.direction.y};
       else
       {
-        try
-        {
-          this->has_key = true;
-          this->scene.set_tile(this->key_position.x, this->key_position.y, Tile::CORRIDOR);
-        }
-        catch (const exception &e)
-        {
-          this->scene.debug(e.what());
-        }
+        this->has_key = true;
+        this->scene.set_tile(this->key_position.x, this->key_position.y, Tile::CORRIDOR);
       }
-      this->perform_move(this->position + new_direction, new_direction);
+
+      this->perform_move(this->position + move_direction, move_direction);
+      return;
+    }
+
+    if (t.tile == Tile::CAGE)
+    {
+      Point seen_cage_pos = this->position + t.direction;
+      this->cage_position = seen_cage_pos;
+
+      if (!this->has_key && this->key_position != Point{-1, -1})
+      {
+        this->state = State::FETCHING_KEY;
+        return;
+      }
     }
   }
 
@@ -276,24 +293,6 @@ void Character::move_to(int target_x, int target_y)
   {
     Point next_step = path.back();
     Point new_direction = {next_step.x - start.x, next_step.y - start.y};
-
     this->perform_move(next_step, new_direction);
-
-    if (this->scene.get_tile(this->position.x, this->position.y) == Tile::KEY)
-    {
-      double option = double(random()) / RAND_MAX;
-      if (option > 0.5)
-      {
-        try
-        {
-          this->has_key = true;
-          this->scene.set_tile(this->position.x, this->position.y, Tile::CORRIDOR);
-        }
-        catch (const exception &e)
-        {
-          this->scene.debug(e.what());
-        }
-      }
-    }
   }
 }

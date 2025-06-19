@@ -17,7 +17,7 @@ enum class State
 };
 class Character
 {
-public:
+private:
   Point position;
   Point direction;
   Point cage_position;
