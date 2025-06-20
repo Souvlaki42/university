@@ -13,23 +13,16 @@ using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 Scene::Scene(const std::string &map_path) : moves(0), running(true), winning(false)
 {
   this->log(L"Κινήσεις", this->moves);
-  try
+  if (map_path.size() > 4 && map_path.substr(map_path.size() - 4) == ".dat")
   {
-    if (map_path.size() > 4 && map_path.substr(map_path.size() - 4) == ".dat")
-    {
-      this->loadFromBinary(map_path);
-    }
-    else
-    {
-      this->loadFromText(map_path);
-    }
+    this->loadFromBinary(map_path);
+  }
+  else
+  {
+    this->loadFromText(map_path);
+  }
 
-    this->placeInitialItems();
-  }
-  catch (const std::exception &e)
-  {
-    this->log(L"", e.what());
-  }
+  this->placeInitialItems();
 }
 
 void Scene::loadFromText(const std::string &path)
@@ -37,7 +30,7 @@ void Scene::loadFromText(const std::string &path)
   std::ifstream file(path);
   if (!file)
   {
-    throw std::runtime_error("Σφάλμα: Αδυναμία ανοίγματος αρχείου χάρτη " + path);
+    throw std::runtime_error("Αδυναμία ανοίγματος αρχείου χάρτη " + path);
   }
 
   std::string line;
@@ -66,7 +59,12 @@ void Scene::loadFromText(const std::string &path)
     this->contents.push_back(row);
     y_coord++;
   }
-  this->dimensions = {map_width + 1, y_coord + 1};
+  this->dimensions = {map_width, y_coord};
+
+  if (this->dimensions.width <= 0 || this->dimensions.height <= 0)
+  {
+    throw std::runtime_error("Ο χάρτης είναι κενός ή μη έγκυρος.");
+  }
 }
 
 void Scene::loadFromBinary(const std::string &path)
@@ -74,7 +72,7 @@ void Scene::loadFromBinary(const std::string &path)
   std::ifstream file(path, std::ios::binary);
   if (!file)
   {
-    throw std::runtime_error("Σφάλμα: Αδυναμία ανοίγματος δυαδικού αρχείου χάρτη " + path);
+    throw std::runtime_error("Αδυναμία ανοίγματος δυαδικού αρχείου χάρτη " + path);
   }
 
   uint32_t width = 0, height = 0;
@@ -83,9 +81,16 @@ void Scene::loadFromBinary(const std::string &path)
 
   if (!file)
   {
-    throw std::runtime_error("Σφάλμα: Μη έγκυρη ή κατεστραμμένη κεφαλίδα στο δυαδικό αρχείο " + path);
+    throw std::runtime_error("Μη έγκυρη ή κατεστραμμένη κεφαλίδα στο δυαδικό αρχείο " + path);
   }
+
   this->dimensions = {width, height};
+
+  if (this->dimensions.width <= 0 || this->dimensions.height <= 0)
+  {
+    throw std::runtime_error("Ο χάρτης είναι κενός ή μη έγκυρος.");
+  }
+
   this->contents.resize(height, std::vector<Tile>(width));
 
   for (size_t y = 0; y < height; ++y)
@@ -96,7 +101,7 @@ void Scene::loadFromBinary(const std::string &path)
       file.read(&tile_char, sizeof(tile_char));
       if (!file)
       {
-        throw std::runtime_error("Σφάλμα: Ελλιπή δεδομένα χάρτη στο αρχείο " + path);
+        throw std::runtime_error("Ελλιπή δεδομένα χάρτη στο αρχείο " + path);
       }
       Tile tile = char_to_tile(tile_char);
       this->contents[y][x] = tile;
@@ -111,11 +116,17 @@ void Scene::loadFromBinary(const std::string &path)
 
 void Scene::placeTileAtRandomCorridor(Tile tileToPlace)
 {
+  int safety_counter = 0;
   Point random_pos;
   do
   {
     random_pos.x = random() % this->dimensions.width;
     random_pos.y = random() % this->dimensions.height;
+    safety_counter++;
+    if (safety_counter > 10000)
+    {
+      throw std::runtime_error("Δεν βρέθηκαν διάδρομοι για την τοποθέτηση των αντικειμένων.");
+    }
   } while (get_tile(random_pos.x, random_pos.y) != Tile::CORRIDOR);
 
   set_tile(random_pos.x, random_pos.y, tileToPlace);
@@ -180,7 +191,7 @@ void Scene::draw_debug()
   int screen_height, screen_width;
   getmaxyx(stdscr, screen_height, screen_width);
 
-  const int panel_start_x = this->dimensions.width;
+  const int panel_start_x = this->dimensions.width + 2;
   const int panel_width = screen_width - panel_start_x;
   const int text_padding = 2;
 
@@ -192,7 +203,7 @@ void Scene::draw_debug()
     clrtoeol();
   }
 
-  mvvline(1, panel_start_x, ACS_VLINE, this->dimensions.height - 2);
+  mvvline(1, panel_start_x, ACS_VLINE, this->dimensions.height);
 
   int current_y = 2;
   if (max_text_width > 0)
