@@ -1,8 +1,7 @@
 #include <iostream>
 #include <vector>
-#include <string>
 #include <fstream>
-#include <curses.h>
+#include <cursesw.h>
 
 #include "character.h"
 #include "scene.h"
@@ -11,67 +10,127 @@
 
 using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
-Scene::Scene(const char *map_path) : moves(0), debug_msg(""), running(true), winning(false)
+Scene::Scene(const std::string &map_path) : moves(0), running(true), winning(false)
 {
-  this->file.open(map_path);
-  string line;
+  this->log(L"Κινήσεις", this->moves);
+  try
+  {
+    if (map_path.size() > 4 && map_path.substr(map_path.size() - 4) == ".dat")
+    {
+      this->loadFromBinary(map_path);
+    }
+    else
+    {
+      this->loadFromText(map_path);
+    }
 
-  size_t y_coord = 0;
+    this->placeInitialItems();
+  }
+  catch (const std::exception &e)
+  {
+    this->log(L"", e.what());
+  }
+}
+
+void Scene::loadFromText(const std::string &path)
+{
+  std::ifstream file(path);
+  if (!file)
+  {
+    throw std::runtime_error("Σφάλμα: Αδυναμία ανοίγματος αρχείου χάρτη " + path);
+  }
+
+  std::string line;
   size_t map_width = 0;
+  size_t y_coord = 0;
+
   while (getline(file, line))
   {
-    size_t x_coord = 0;
-    vector<Tile> row;
-
     if (map_width == 0 && !line.empty())
     {
       map_width = line.length();
     }
 
-    for (const char &c : line)
+    std::vector<Tile> row;
+    row.reserve(map_width);
+    for (size_t x_coord = 0; x_coord < line.length(); ++x_coord)
     {
-      Tile tile = static_cast<Tile>(c); //! IMPORTANT: static cast
+      Tile tile = char_to_tile(line[x_coord]);
       row.push_back(tile);
 
       if (tile == Tile::LADDER)
       {
-        this->ladder_pos = Point{int(x_coord), int(y_coord)};
+        this->ladder_pos = {int(x_coord), int(y_coord)};
       }
-      x_coord++;
     }
-
     this->contents.push_back(row);
     y_coord++;
   }
-  this->dimensions = Dimensions{map_width, y_coord};
+  this->dimensions = {map_width + 1, y_coord + 1};
+}
 
-  Point tmp_pos = {0, 0};
-
-  while (get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR)
+void Scene::loadFromBinary(const std::string &path)
+{
+  std::ifstream file(path, std::ios::binary);
+  if (!file)
   {
-    tmp_pos.x = random() % this->dimensions.width;
-    tmp_pos.y = random() % this->dimensions.height;
+    throw std::runtime_error("Σφάλμα: Αδυναμία ανοίγματος δυαδικού αρχείου χάρτη " + path);
   }
-  contents[tmp_pos.y][tmp_pos.x] = Tile::TRAP;
 
-  while (get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR)
-  {
-    tmp_pos.x = random() % this->dimensions.width;
-    tmp_pos.y = random() % this->dimensions.height;
-  }
-  contents[tmp_pos.y][tmp_pos.x] = Tile::TRAP;
+  uint32_t width = 0, height = 0;
+  file.read(reinterpret_cast<char *>(&width), sizeof(width));
+  file.read(reinterpret_cast<char *>(&height), sizeof(height));
 
-  while (get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR)
+  if (!file)
   {
-    tmp_pos.x = random() % this->dimensions.width;
-    tmp_pos.y = random() % this->dimensions.height;
+    throw std::runtime_error("Σφάλμα: Μη έγκυρη ή κατεστραμμένη κεφαλίδα στο δυαδικό αρχείο " + path);
   }
-  contents[tmp_pos.y][tmp_pos.x] = Tile::KEY;
+  this->dimensions = {width, height};
+  this->contents.resize(height, std::vector<Tile>(width));
+
+  for (size_t y = 0; y < height; ++y)
+  {
+    for (size_t x = 0; x < width; ++x)
+    {
+      char tile_char;
+      file.read(&tile_char, sizeof(tile_char));
+      if (!file)
+      {
+        throw std::runtime_error("Σφάλμα: Ελλιπή δεδομένα χάρτη στο αρχείο " + path);
+      }
+      Tile tile = char_to_tile(tile_char);
+      this->contents[y][x] = tile;
+
+      if (tile == Tile::LADDER)
+      {
+        this->ladder_pos = {int(x), int(y)};
+      }
+    }
+  }
+}
+
+void Scene::placeTileAtRandomCorridor(Tile tileToPlace)
+{
+  Point random_pos;
+  do
+  {
+    random_pos.x = random() % this->dimensions.width;
+    random_pos.y = random() % this->dimensions.height;
+  } while (get_tile(random_pos.x, random_pos.y) != Tile::CORRIDOR);
+
+  set_tile(random_pos.x, random_pos.y, tileToPlace);
+}
+
+void Scene::placeInitialItems()
+{
+  placeTileAtRandomCorridor(Tile::TRAP);
+  placeTileAtRandomCorridor(Tile::TRAP);
+  placeTileAtRandomCorridor(Tile::KEY);
 }
 
 Scene::~Scene()
 {
-  if (this->winning)
+  if (this->is_winning())
   {
     cout << "Τελικά βρεθήκαν οι χαρακτήρες και το βασίλειο σώθηκε. Πέρασαν " << this->moves << " τέρμινα.\n";
   }
@@ -79,11 +138,6 @@ Scene::~Scene()
   {
     cout << "Τελικά δεν βρεθήκαν οι χαρακτήρες και το βασίλειο χάθηκε. Πέρασαν " << this->moves << " τέρμινα.\n";
   }
-}
-
-const bool Scene::is_open() const
-{
-  return this->file.is_open();
 }
 
 const bool Scene::is_winning() const
@@ -99,24 +153,94 @@ const bool Scene::is_running() const
 void Scene::update()
 {
   this->moves++;
+  this->log(L"Κινήσεις", this->moves);
   if (getch() == 'q' || this->moves >= TERMINA)
   {
     this->set_winning(false);
-    this->set_running(false);
+    this->stop_running();
   }
 }
 
 void Scene::render()
 {
+  box(stdscr, 0, 0);
   for (size_t y = 0; y < this->contents.size(); ++y)
   {
     for (size_t x = 0; x < this->contents[y].size(); ++x)
     {
-      mvaddch(y, x, static_cast<char>(this->contents[y][x])); //! IMPORTANT: static cast
+      mvaddch(y + 1, x + 1, tile_to_char(this->contents[y][x]));
     }
   }
 
-  mvaddstr(this->dimensions.height + 2, this->dimensions.width / 2, this->debug_msg.c_str());
+  this->draw_debug();
+}
+
+void Scene::draw_debug()
+{
+  int screen_height, screen_width;
+  getmaxyx(stdscr, screen_height, screen_width);
+
+  const int panel_start_x = this->dimensions.width;
+  const int panel_width = screen_width - panel_start_x;
+  const int text_padding = 2;
+
+  const int max_text_width = (panel_width > text_padding * 2) ? (panel_width - text_padding * 2) : 0;
+
+  for (int y = 1; y < this->dimensions.height - 1; ++y)
+  {
+    move(y, panel_start_x + 1);
+    clrtoeol();
+  }
+
+  mvvline(1, panel_start_x, ACS_VLINE, this->dimensions.height - 2);
+
+  int current_y = 2;
+  if (max_text_width > 0)
+  {
+    mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΚΑΤΑΣΤΑΣΗ ---");
+    current_y++;
+
+    const std::map<std::wstring, std::wstring> &status = this->get_debug_status();
+    for (std::map<std::wstring, std::wstring>::const_iterator it = status.begin(); it != status.end(); ++it)
+    {
+      if (current_y >= this->dimensions.height - 2)
+        break;
+
+      std::wstring line = it->first + L": " + it->second;
+      if (line.length() > max_text_width)
+      {
+        line = line.substr(0, max_text_width);
+      }
+      mvaddwstr(current_y++, panel_start_x + text_padding, line.c_str());
+    }
+
+    current_y += 2;
+    mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΣΥΜΒΑΝΤΑ ---");
+
+    const std::vector<std::wstring> &events = this->get_event_logs();
+    for (size_t i = 0; i < events.size(); ++i)
+    {
+      if (current_y >= this->dimensions.height - 2)
+        break;
+
+      std::wstring line = events[i];
+      if (line.length() > max_text_width)
+      {
+        line = line.substr(0, max_text_width);
+      }
+      mvaddwstr(current_y++, panel_start_x + text_padding, line.c_str());
+    }
+  }
+}
+
+const std::vector<std::wstring> &Scene::get_event_logs() const
+{
+  return this->event_logs;
+}
+
+const std::map<std::wstring, std::wstring> &Scene::get_debug_status() const
+{
+  return this->debug_status;
 }
 
 const Dimensions Scene::get_dimensions() const
@@ -144,49 +268,49 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
   if (y < 0 || y >= this->contents.size() ||
       x < 0 || x >= this->contents[y].size())
   {
-    throw out_of_range("Σφάλμα: Λάθος συντεταγμένες.");
+    this->contents[y][x] = Tile::NONE;
   }
   this->contents[y][x] = newTile;
 }
 
 void Scene::set_winning(const bool winning)
 {
-  if (winning)
-  {
-    this->clear_maze();
-  }
-
   this->winning = winning;
 }
 
-void Scene::set_running(const bool running)
+void Scene::stop_running()
 {
-  this->running = running;
+  this->running = false;
+}
+void Scene::place_characters(Character &char1, Character &char2)
+{
+  while ((this->get_tile(char1.get_position().x, char1.get_position().y) != Tile::CORRIDOR) ||
+         (this->get_tile(char2.get_position().x, char2.get_position().y) != Tile::CORRIDOR) ||
+         (abs(char2.get_position().x - char1.get_position().x) < 7 && abs(char2.get_position().y - char1.get_position().y) < 7))
+  {
+    char1.set_position();
+    char2.set_position();
+  }
 }
 
-void Scene::clear_maze()
+void Scene::clear_maze(const Point &player1_pos, const Point &player2_pos)
 {
-  try
+  for (size_t y = 0; y < this->contents.size(); ++y)
   {
-    for (size_t y = 0; y < this->contents.size(); ++y)
+    for (size_t x = 0; x < this->contents[y].size(); ++x)
     {
-      for (size_t x = 0; x < this->contents[y].size(); ++x)
+      Point current_pos = {(int)(x), (int)(y)};
+
+      if (current_pos == player1_pos || current_pos == player2_pos)
       {
-        const Tile tile = this->contents[y][x];
-        if (tile == Tile::CAGE || tile == Tile::TRAP || tile == Tile::WALL)
-        {
-          this->set_tile(x, y, Tile::CORRIDOR);
-        }
+        continue;
+      }
+
+      const Tile tile = this->get_tile(x, y);
+      if (tile == Tile::CAGE || tile == Tile::TRAP || tile == Tile::WALL)
+      {
+        this->set_tile(x, y, Tile::CORRIDOR);
       }
     }
   }
-  catch (const std::exception &e)
-  {
-    this->debug(e.what());
-  }
-}
-
-void Scene::debug(string message)
-{
-  this->debug_msg = message;
 }

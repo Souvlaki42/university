@@ -2,36 +2,67 @@
 #define MAP
 
 #include <vector>
-#include <string>
-#include <fstream>
+#include <map>
+#include <sstream>
 #include "utils.h"
+#include "character.h"
 
-using std::vector, std::string, std::ifstream;
+using std::vector, std::map, std::wstringstream, std::wstring, std::string;
 
 class Scene
 {
 private:
-  ifstream file;
   vector<vector<Tile>> contents;
   Dimensions dimensions;
   Point ladder_pos;
-  string debug_msg;
   int moves;
   bool winning;
   bool running;
-  void clear_maze();
+  vector<wstring> event_logs;
+  map<wstring, wstring> debug_status;
+
+  void loadFromText(const string &path);
+  void loadFromBinary(const string &path);
+  void placeInitialItems();
+  void placeTileAtRandomCorridor(Tile tileToPlace);
+  void draw_debug();
+
+  const vector<wstring> &get_event_logs() const;
+  const map<wstring, wstring> &get_debug_status() const;
 
 public:
-  Scene(const char *map_path);
+  Scene(const string &map_path);
   ~Scene();
 
-  const bool is_open() const;
   const bool is_winning() const;
   const bool is_running() const;
 
   void update();
   void render();
-  void debug(string message);
+  void clear_maze(const Point &player1_pos, const Point &player2_pos);
+  void place_characters(Character &char1, Character &char2);
+  void stop_running();
+
+  template <typename... Args>
+  void log(const wstring &key, const Args &...args)
+  {
+    wstringstream buffer;
+
+    (buffer << ... << args);
+
+    if (key.empty())
+    {
+      this->event_logs.push_back(buffer.str());
+      if (this->event_logs.size() > 20)
+      {
+        this->event_logs.erase(this->event_logs.begin());
+      }
+    }
+    else
+    {
+      this->debug_status[key] = buffer.str();
+    }
+  }
 
   const Dimensions get_dimensions() const;
   const Tile get_tile(int x, int y) const;
@@ -39,7 +70,6 @@ public:
 
   void set_tile(int x, int y, const Tile &newTile);
   void set_winning(const bool winning);
-  void set_running(const bool running);
 };
 
 #endif

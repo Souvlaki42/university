@@ -1,0 +1,102 @@
+#include "utils.h"
+#include <ostream>
+
+bool Point::operator==(const Point &other) const
+{
+  return x == other.x && y == other.y;
+}
+
+bool Point::operator!=(const Point &other) const
+{
+  return !(*this == other);
+}
+
+bool Point::operator<(const Point &other) const
+{
+  if (y == other.y)
+    return x < other.x;
+  return y < other.y;
+}
+
+Point &Point::operator+=(const Point &other)
+{
+  this->x += other.x;
+  this->y += other.y;
+  return *this;
+}
+
+Point Point::operator+(const Point &other) const
+{
+  return {this->x + other.x, this->y + other.y};
+}
+
+std::wostream &operator<<(std::wostream &os, const Point &p)
+{
+  os << L"(" << p.x << L", " << p.y << L")";
+  return os;
+}
+
+std::wostream &operator<<(std::wostream &os, const CharacterState &s)
+{
+  switch (s)
+  {
+  case CharacterState::EXPLORING:
+    os << L"Exploring...";
+    break;
+  case CharacterState::FETCHING_KEY:
+    os << L"Fetching key...";
+    break;
+  case CharacterState::GOING_TO_CAGE:
+    os << L"Going to cage...";
+    break;
+  case CharacterState::EXITING:
+    os << L"Exiting...";
+    break;
+  default:
+    os << L"Invalid character state";
+    break;
+  }
+  return os;
+}
+
+char tile_to_char(Tile t)
+{
+  switch (t)
+  {
+  case Tile::WALL:
+    return '*';
+  case Tile::CORRIDOR:
+    return ' ';
+  case Tile::LADDER:
+    return 'L';
+  case Tile::KEY:
+    return 'K';
+  case Tile::TRAP:
+    return 'T';
+  case Tile::CAGE:
+    return 'C';
+  default:
+    return '0';
+  }
+}
+
+Tile char_to_tile(char c)
+{
+  switch (c)
+  {
+  case '*':
+    return Tile::WALL;
+  case ' ':
+    return Tile::CORRIDOR;
+  case 'L':
+    return Tile::LADDER;
+  case 'K':
+    return Tile::KEY;
+  case 'T':
+    return Tile::TRAP;
+  case 'C':
+    return Tile::CAGE;
+  default:
+    return Tile::NONE;
+  }
+}

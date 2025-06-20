@@ -1,55 +1,49 @@
-#ifndef UTILS
-#define UTILS
+#ifndef UTILS_H
+#define UTILS_H
 
-typedef struct Point
+#include <cstddef>
+#include <ostream>
+
+struct Point
 {
   int x, y;
-  bool operator==(const Point &other) const
-  {
-    return x == other.x && y == other.y;
-  }
-  bool operator!=(const Point &other) const
-  {
-    return x != other.x || y != other.y;
-  }
-  bool operator<(const Point &other) const
-  {
-    if (y == other.y)
-      return x < other.x;
-    return y < other.y;
-  }
-  Point operator+=(const Point &other)
-  {
-    this->x += other.x;
-    this->y += other.y;
-    return *this;
-  }
-  Point operator+(const Point &other) const
-  {
-    return {this->x + other.x, this->y + other.y};
-  }
-} Point;
 
-typedef struct Dimensions
+  bool operator==(const Point &other) const;
+  bool operator!=(const Point &other) const;
+  bool operator<(const Point &other) const;
+  Point &operator+=(const Point &other);
+  Point operator+(const Point &other) const;
+};
+
+struct Dimensions
 {
   size_t width, height;
-} Dimensions;
+};
 
 enum class Tile
 {
-  NONE = '0',
-  WALL = '*',
-  CORRIDOR = ' ',
-  LADDER = 'L',
-  KEY = 'K',
-  TRAP = 'T',
-  CAGE = 'C'
+  NONE,
+  WALL,
+  CORRIDOR,
+  LADDER,
+  KEY,
+  TRAP,
+  CAGE,
 };
 
-typedef struct TileWithDirection
+enum class CharacterState
 {
-  Tile tile;
-  Point direction;
-} TileWithDirection;
+  EXPLORING,
+  FETCHING_KEY,
+  GOING_TO_CAGE,
+  EXITING
+};
+
+std::wostream &operator<<(std::wostream &os, const Point &p);
+std::wostream &operator<<(std::wostream &os, const CharacterState &s);
+
+char tile_to_char(Tile t);
+
+Tile char_to_tile(char c);
 
 #endif

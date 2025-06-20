@@ -4,17 +4,10 @@
 #include "utils.h"
 #include <set>
 #include <vector>
-#include <map>
-#include <queue>
+#include <unordered_map>
 
-using std::set, std::vector;
+using std::set, std::vector, std::unordered_map;
 
-enum class State
-{
-  EXPLORING,
-  FETCHING_KEY,
-  GOING_TO_CAGE
-};
 class Character
 {
 private:
@@ -22,25 +15,29 @@ private:
   Point direction;
   Point cage_position;
   Point key_position;
-  State state;
-
+  CharacterState state;
   char symbol;
   bool trapped, has_key;
   class Scene &scene;
-  const vector<TileWithDirection> look_around_from(Point from) const;
-  void move();
-  void move_to(int x, int y);
-  void perform_move(const Point new_position, const Point new_direction);
   set<Point> visited;
+  vector<Point> directions;
+  vector<Tile> around;
+
+  const bool is_walkable(const Tile t) const;
+  void move(const Point &target_pos = {-1, -1});
 
 public:
-  Character(class Scene &scene, char symbol);
+  void look_around_from(Point from);
+  Character(class Scene &scene, char symbol, bool has_key = false, Point position = {-1, -1});
+
   void update(Character &partner);
   void render();
+
   const Point get_position() const;
+  void set_position(const Point &new_pos = Point{-1, -1});
+
   const bool is_trapped() const;
   void set_trapped(const bool trapped);
-  void set_random_position();
 };
 
 #endif

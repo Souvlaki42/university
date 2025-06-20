@@ -30,3 +30,6 @@
 
 # Unignore all dirs
 !*/
+
+# Unignore python scripts
+!*.py
