@@ -2,14 +2,13 @@
 #include <unistd.h>
 #include <iostream>
 #include <string>
+#include <locale.h>
 #include "scene.h"
 #include "character.h"
 
 using std::cerr, std::string;
 
-#define DELAY 1'000'000 // 1 second to microseconds
-
-//! Instructions: https://docs.google.com/document/d/12qdicYiuhyEsiSzJqg7Vp2uN0f_mEO32C6b3-flJtj0/edit?tab=t.0
+//! Οδηγίες: https://docs.google.com/document/d/12qdicYiuhyEsiSzJqg7Vp2uN0f_mEO32C6b3-flJtj0/edit?tab=t.0
 int main(int argc, char *argv[])
 {
   setlocale(LC_ALL, "");
@@ -43,7 +42,7 @@ int main(int argc, char *argv[])
     asimenia.render();
     refresh();
 
-    usleep(DELAY);
+    usleep(FRAME_DELAY_MS);
 
     while (scene.is_running())
     {
@@ -57,7 +56,7 @@ int main(int argc, char *argv[])
       asimenia.render();
       refresh();
 
-      usleep(DELAY);
+      usleep(FRAME_DELAY_MS);
     }
 
     endwin();

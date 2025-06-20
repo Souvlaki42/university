@@ -6,8 +6,6 @@
 #include "character.h"
 #include "scene.h"
 
-#define TERMINA 1000
-
 using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
 Scene::Scene(const std::string &map_path) : moves(0), running(true), winning(false)
@@ -123,7 +121,7 @@ void Scene::placeTileAtRandomCorridor(Tile tileToPlace)
     random_pos.x = random() % this->dimensions.width;
     random_pos.y = random() % this->dimensions.height;
     safety_counter++;
-    if (safety_counter > 10000)
+    if (safety_counter > MAX_RAND_PLACEMENTS)
     {
       throw std::runtime_error("Δεν βρέθηκαν διάδρομοι για την τοποθέτηση των αντικειμένων.");
     }
@@ -165,7 +163,7 @@ void Scene::update()
 {
   this->moves++;
   this->log(L"Κινήσεις", this->moves);
-  if (getch() == 'q' || this->moves >= TERMINA)
+  if (getch() == 'q' || this->moves >= MAX_MOVES)
   {
     this->set_winning(false);
     this->stop_running();

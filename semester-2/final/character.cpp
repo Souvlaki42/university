@@ -20,14 +20,14 @@ void Character::look_around_from(Point from)
 {
   if (this->directions.empty())
   {
-    this->directions.push_back({0, -1});  // TOP
-    this->directions.push_back({0, 1});   // BOTTOM
-    this->directions.push_back({-1, 0});  // LEFT
-    this->directions.push_back({1, 0});   // RIGHT
-    this->directions.push_back({1, -1});  // TOP-RIGHT
-    this->directions.push_back({-1, 1});  // BOTTOM-LEFT
-    this->directions.push_back({-1, -1}); // TOP-LEFT
-    this->directions.push_back({1, 1});   // BOTTOM-RIGHT
+    this->directions.push_back({0, -1});  // Πάνω
+    this->directions.push_back({0, 1});   // Κάτω
+    this->directions.push_back({-1, 0});  // Αριστερά
+    this->directions.push_back({1, 0});   // Δεξιά
+    this->directions.push_back({1, -1});  // Πάνω δεξιά
+    this->directions.push_back({-1, 1});  // Κάτω αριστερά
+    this->directions.push_back({-1, -1}); // Πάνω αριστερά
+    this->directions.push_back({1, 1});   // Κάτω δεξιά
   }
 
   for (int i = 0; i < this->directions.size(); i++)
@@ -64,7 +64,7 @@ void Character::set_position(const Point &new_pos)
     tmp_pos.x = random() % dimensions.width;
     tmp_pos.y = random() % dimensions.height;
     safety_counter++;
-    if (safety_counter > 10000)
+    if (safety_counter > MAX_RAND_PLACEMENTS)
     {
       throw std::runtime_error("Δεν βρέθηκαν διάδρομοι για την τοποθέτηση τών χαρακτήρων.");
     }
