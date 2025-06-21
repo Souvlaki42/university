@@ -42,7 +42,17 @@ int main(int argc, char *argv[])
     leaveok(stdscr, true);
     scrollok(stdscr, false);
 
-    scene.log_event(L"Πάτα 'q' για να τερματήσεις την προσομοίωση χειροκίνητα.");
+    scene.log_event(L"Πάτα 'q' για να τερματήσεις την προσομοίωση.");
+
+    scene.log(L"Τέρμινα", moves_left);
+    scene.log(L"Κατάσταση", gameState);
+
+    scene.render();
+    grigorakis.render();
+    asimenia.render();
+    refresh();
+
+    usleep(FRAME_DELAY_MS);
 
     while (gameState != GameState::DONE)
     {
@@ -63,7 +73,8 @@ int main(int argc, char *argv[])
         }
 
         moves_left--;
-        scene.update_moves_counter(moves_left);
+        scene.log(L"Τέρμινα", moves_left);
+        scene.log(L"Κατάσταση", gameState);
 
         check_game_over_conditions(grigorakis, asimenia, scene, gameState, moves_left);
       }

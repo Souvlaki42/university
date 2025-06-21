@@ -10,11 +10,9 @@ RUN_FLAGS := map1.txt
 .PHONY: all debug run drun clean
 
 all:
-	rm -f $(OUT)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(OUT) $(LDFLAGS)
 
 debug:
-	rm -f $(OUT)
 	$(CXX) $(CXXFLAGS) $(DEBUG_FLAGS) $(SRC) -o $(OUT) $(LDFLAGS)
 
 run: all

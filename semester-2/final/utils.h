@@ -70,6 +70,7 @@ enum class GameState
 
 std::wostream &operator<<(std::wostream &os, const Point &p);
 std::wostream &operator<<(std::wostream &os, const CharacterState &s);
+std::wostream &operator<<(std::wostream &os, const GameState &s);
 
 char tile_to_char(Tile t);
 

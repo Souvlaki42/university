@@ -23,11 +23,9 @@ public:
   const Dimensions get_dimensions() const;
   const Point get_ladder_position() const;
 
-  void update_moves_counter(int moves);
-  void log_event(const std::wstring &event);
-
   template <typename T>
   void log(const std::wstring &key, const T &value);
+  void log_event(const std::wstring &event);
 
 private:
   std::vector<std::vector<Tile>> contents;

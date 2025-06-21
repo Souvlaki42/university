@@ -92,11 +92,6 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
 const Dimensions Scene::get_dimensions() const { return this->dimensions; }
 const Point Scene::get_ladder_position() const { return this->ladder_pos; }
 
-void Scene::update_moves_counter(int moves)
-{
-  this->log(L"Τέρμινα", moves);
-}
-
 void Scene::log_event(const std::wstring &event)
 {
   this->event_logs.insert(this->event_logs.begin(), event);
@@ -120,6 +115,7 @@ template void Scene::log<bool>(const std::wstring &, const bool &);
 template void Scene::log<Point>(const std::wstring &, const Point &);
 template void Scene::log<CharacterState>(const std::wstring &, const CharacterState &);
 template void Scene::log<std::wstring>(const std::wstring &, const std::wstring &);
+template void Scene::log<GameState>(const std::wstring &, const GameState &);
 
 void Scene::loadFromText(const std::string &path)
 {

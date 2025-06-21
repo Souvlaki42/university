@@ -42,19 +42,42 @@ std::wostream &operator<<(std::wostream &os, const CharacterState &s)
   switch (s)
   {
   case CharacterState::EXPLORING:
-    os << L"Εξερευνώ...";
+    os << L"Εξερευνώ";
     break;
   case CharacterState::FETCHING_KEY:
-    os << L"Πάω να πάω το κλειδί...";
+    os << L"Πάω να πάω το κλειδί";
     break;
   case CharacterState::GOING_TO_CAGE:
-    os << L"Πάω να ξεκλειδώσω το κλουβί...";
+    os << L"Πάω να ξεκλειδώσω το κλουβί";
     break;
   case CharacterState::GOING_TO_LADDER:
-    os << L"Πάω στην σκάλα...";
+    os << L"Πάω στην σκάλα";
     break;
   case CharacterState::IDLE:
-    os << L"Δεν κάνω τίποτα...";
+    os << L"Δεν κάνω τίποτα";
+    break;
+  default:
+    os << L"Λάθος κατάσταση";
+    break;
+  }
+  return os;
+}
+
+std::wostream &operator<<(std::wostream &os, const GameState &s)
+{
+  switch (s)
+  {
+  case GameState::RUNNING:
+    os << L"Εκτελείται";
+    break;
+  case GameState::WINNING:
+    os << L"Νικήσαμε";
+    break;
+  case GameState::LOSING:
+    os << L"Χάσαμε";
+    break;
+  case GameState::DONE:
+    os << L"Τελείωσαμε";
     break;
   default:
     os << L"Λάθος κατάσταση";
