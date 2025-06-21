@@ -15,6 +15,7 @@ Character::Character(Scene &scene, char symbol, bool has_key, Point position) : 
   this->state = CharacterState::EXPLORING;
   this->key_position = {-1, -1};
   this->cage_position = {-1, -1};
+  this->unreachable_points = {};
   this->log_state();
 }
 
@@ -130,11 +131,11 @@ void Character::update(Character &partner)
   {
     if (this->cage_position != Point{-1, -1})
     {
-      if (this->has_key)
+      if (this->has_key && this->unreachable_points.find(this->cage_position) == this->unreachable_points.end())
       {
         this->state = CharacterState::GOING_TO_CAGE;
       }
-      else if (this->key_position != Point{-1, -1})
+      else if (this->key_position != Point{-1, -1} && this->unreachable_points.find(this->key_position) == this->unreachable_points.end())
       {
         this->state = CharacterState::FETCHING_KEY;
       }
@@ -278,6 +279,7 @@ void Character::move(const Point &target_pos)
     if (next_pos == Point{-1, -1})
     {
       this->scene.log_event(L"Δεν βρέθηκε μονοπάτι, η εξερεύνηση συνεχίζεται.");
+      this->unreachable_points.insert(target_pos);
       this->state = CharacterState::EXPLORING;
     }
   }

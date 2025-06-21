@@ -3,8 +3,9 @@
 
 #include "utils.h"
 #include <unordered_map>
+#include <unordered_set>
 
-using std::unordered_map;
+using std::unordered_map, std::unordered_set;
 
 class Character
 {
@@ -19,6 +20,7 @@ private:
   bool has_key;
   class Scene &scene;
   unordered_map<Point, int> visited_counts;
+  unordered_set<Point> unreachable_points;
 
   void log_state();
   Point find_next_step(const Point &goal);
