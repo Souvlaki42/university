@@ -57,7 +57,7 @@ void Character::set_position(const Point &new_pos)
   if (new_pos != Point{-1, -1})
   {
     this->position = new_pos;
-    this->visited.insert(new_pos);
+    this->visited_counts[new_pos]++;
     return;
   }
 
@@ -76,7 +76,7 @@ void Character::set_position(const Point &new_pos)
   } while (this->scene.get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR);
 
   this->position = tmp_pos;
-  this->visited.insert(tmp_pos);
+  this->visited_counts[tmp_pos] = 1;
 }
 
 const bool Character::is_trapped() const
@@ -172,36 +172,77 @@ void Character::update(Character &partner)
 void Character::move(const Point &target_pos)
 {
   Point next_pos = {-1, -1};
+  bool move_decided = false;
 
   if (target_pos == Point{-1, -1})
   {
-    vector<Point> unvisited_options;
-    vector<Point> visited_options;
-    unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
+    Point straight_ahead_pos = {this->position.x + this->direction.x, this->position.y + this->direction.y};
+    Tile tile_ahead = this->scene.get_tile(straight_ahead_pos.x, straight_ahead_pos.y);
 
-    for (const pair<Point, Tile> &pair : surroundings)
+    if (is_walkable(tile_ahead))
     {
-      if (is_walkable(pair.second))
+      next_pos = straight_ahead_pos;
+      move_decided = true;
+    }
+
+    if (!move_decided)
+    {
+      vector<Point> unvisited_options;
+      vector<Point> visited_options;
+      unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
+      for (const pair<Point, Tile> &pair : surroundings)
       {
-        Point potential_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
-        if (this->visited.find(potential_pos) == this->visited.end())
+        if (is_walkable(pair.second))
         {
-          unvisited_options.push_back(potential_pos);
+          Point potential_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
+          if (this->visited_counts.find(potential_pos) == this->visited_counts.end())
+          {
+            unvisited_options.push_back(potential_pos);
+          }
         }
-        else
-        {
-          visited_options.push_back(potential_pos);
-        }
+      }
+      if (!unvisited_options.empty())
+      {
+        next_pos = unvisited_options[random() % unvisited_options.size()];
+        move_decided = true;
       }
     }
 
-    if (!unvisited_options.empty())
+    if (!move_decided)
     {
-      next_pos = unvisited_options[random() % unvisited_options.size()];
-    }
-    else if (!visited_options.empty())
-    {
-      next_pos = visited_options[random() % visited_options.size()];
+      vector<Point> visited_options;
+      unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
+      for (const pair<Point, Tile> &pair : surroundings)
+      {
+        if (is_walkable(pair.second))
+        {
+          visited_options.push_back({this->position.x + pair.first.x, this->position.y + pair.first.y});
+        }
+      }
+
+      if (!visited_options.empty())
+      {
+        int min_visits = -1;
+        for (const Point &pos : visited_options)
+        {
+          int current_visits = this->visited_counts[pos];
+          if (min_visits == -1 || current_visits < min_visits)
+          {
+            min_visits = current_visits;
+          }
+        }
+
+        vector<Point> least_visited_options;
+        for (const Point &pos : visited_options)
+        {
+          if (this->visited_counts[pos] == min_visits)
+          {
+            least_visited_options.push_back(pos);
+          }
+        }
+        next_pos = least_visited_options[random() % least_visited_options.size()];
+        move_decided = true;
+      }
     }
   }
   else

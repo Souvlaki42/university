@@ -7,8 +7,9 @@
 #include "character.h"
 #include "utils.h"
 
-static void process_character_move(Character &character, Character &partner, Scene &scene, GameState &gameState);
-static void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, GameState &gameState, int &moves_left);
+void process_character_move(Character &character, Character &partner, Scene &scene, GameState &gameState);
+void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, GameState &gameState, int &moves_left);
+void trigger_meetup_sequence(Character &p1, Character &p2, Scene &scene, GameState &gameState);
 
 //! Οδηγίες: https://docs.google.com/document/d/12qdicYiuhyEsiSzJqg7Vp2uN0f_mEO32C6b3-flJtj0/edit?tab=t.0
 int main(int argc, char *argv[])
@@ -143,19 +144,45 @@ void process_character_move(Character &character, Character &partner, Scene &sce
   {
     if (character.get_has_key() && partner.is_trapped())
     {
-      scene.log_event(L"ΝΙΚΗ: Οι χαρακτήρες συναντήθηκαν! Τώρα προς τη σκάλα!");
-      gameState = GameState::WINNING;
-      partner.set_trapped(false);
+      trigger_meetup_sequence(character, partner, scene, gameState);
       scene.set_tile(pos.x, pos.y, Tile::CORRIDOR);
-      scene.remove_obstacles();
-      character.set_state(CharacterState::GOING_TO_LADDER);
-      partner.set_state(CharacterState::GOING_TO_LADDER);
     }
   }
 }
 
 void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, GameState &gameState, int &moves_left)
 {
+  if (gameState == GameState::RUNNING)
+  {
+    bool have_met = false;
+    Point p1_pos = p1.get_position();
+    Point p2_pos = p2.get_position();
+
+    if (p1_pos == p2_pos)
+    {
+      have_met = true;
+    }
+
+    if (!have_met)
+    {
+      std::vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {1, -1}, {-1, 1}, {-1, -1}, {1, 1}};
+      for (const Point &dir : directions)
+      {
+        if (p1_pos.x + dir.x == p2_pos.x && p1_pos.y + dir.y == p2_pos.y)
+        {
+          have_met = true;
+          break;
+        }
+      }
+    }
+
+    if (have_met)
+    {
+      trigger_meetup_sequence(p1, p2, scene, gameState);
+      return;
+    }
+  }
+
   if (gameState == GameState::LOSING || gameState == GameState::DONE)
     return;
 
@@ -184,4 +211,20 @@ void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, Game
       scene.log_event(L"ΝΙΚΗ: Το βασίλειο σώθηκε!");
     }
   }
+}
+
+void trigger_meetup_sequence(Character &p1, Character &p2, Scene &scene, GameState &gameState)
+{
+  scene.log_event(L"ΝΙΚΗ: Οι χαρακτήρες συναντήθηκαν! Τώρα προς τη σκάλα!");
+  gameState = GameState::WINNING;
+
+  if (p1.is_trapped())
+    p1.set_trapped(false);
+  if (p2.is_trapped())
+    p2.set_trapped(false);
+
+  scene.remove_obstacles(p1.get_position(), p2.get_position());
+
+  p1.set_state(CharacterState::GOING_TO_LADDER);
+  p2.set_state(CharacterState::GOING_TO_LADDER);
 }

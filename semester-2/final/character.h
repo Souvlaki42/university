@@ -2,10 +2,9 @@
 #define CHARACTER
 
 #include "utils.h"
-#include <unordered_set>
 #include <unordered_map>
 
-using std::unordered_set, std::unordered_map;
+using std::unordered_map;
 
 class Character
 {
@@ -19,12 +18,12 @@ private:
   bool trapped;
   bool has_key;
   class Scene &scene;
-  unordered_set<Point> visited;
+  unordered_map<Point, int> visited_counts;
 
   void log_state();
   Point find_next_step(const Point &goal);
   const bool is_walkable(const Tile t) const;
-  std::unordered_map<Point, Tile> look_around_from(Point from);
+  unordered_map<Point, Tile> look_around_from(Point from);
 
 public:
   Character(Scene &scene, char symbol, bool has_key, Point position = {-1, -1});

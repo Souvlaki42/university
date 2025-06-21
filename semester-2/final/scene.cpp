@@ -54,12 +54,17 @@ void Scene::place_characters(Character &char1, Character &char2)
   }
 }
 
-void Scene::remove_obstacles()
+void Scene::remove_obstacles(const Point &player1_pos, const Point &player2_pos)
 {
   for (size_t y = 0; y < this->contents.size(); ++y)
   {
     for (size_t x = 0; x < this->contents[y].size(); ++x)
     {
+      Point current_pos = {(int)(x), (int)(y)};
+
+      if (current_pos == player1_pos || current_pos == player2_pos)
+        continue;
+
       const Tile tile = this->get_tile(x, y);
       if (tile == Tile::WALL || tile == Tile::TRAP || tile == Tile::CAGE)
       {
