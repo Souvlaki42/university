@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <ostream>
+#include <sstream>
 
 bool Point::operator==(const Point &other) const
 {
@@ -41,19 +42,19 @@ std::wostream &operator<<(std::wostream &os, const CharacterState &s)
   switch (s)
   {
   case CharacterState::EXPLORING:
-    os << L"Exploring...";
+    os << L"Εξερευνώ...";
     break;
   case CharacterState::FETCHING_KEY:
-    os << L"Fetching key...";
+    os << L"Πάω να πάω το κλειδί...";
     break;
   case CharacterState::GOING_TO_CAGE:
-    os << L"Going to cage...";
+    os << L"Πάω να ξεκληδώσω το κλουβί...";
     break;
   case CharacterState::EXITING:
-    os << L"Exiting...";
+    os << L"Φέυγω...";
     break;
   default:
-    os << L"Invalid character state";
+    os << L"Λάθος κατάσταση";
     break;
   }
   return os;
@@ -99,4 +100,11 @@ Tile char_to_tile(char c)
   default:
     return Tile::NONE;
   }
+}
+
+std::wstring make_char_key(const std::wstring &base_text, char symbol)
+{
+  std::wstringstream ss;
+  ss << base_text << L" (" << symbol << L')';
+  return ss.str();
 }

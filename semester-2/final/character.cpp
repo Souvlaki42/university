@@ -2,18 +2,26 @@
 #include "character.h"
 #include "scene.h"
 
-using std::vector, std::set, std::unordered_map;
+using std::vector, std::set;
 
 Character::Character(Scene &scene, char symbol, bool has_key, Point position) : scene(scene)
 {
   this->position = position;
+  this->direction = {1, 0};
   this->symbol = symbol;
   this->trapped = false;
   this->has_key = has_key;
   this->state = CharacterState::EXPLORING;
   this->key_position = {-1, -1};
   this->cage_position = {-1, -1};
-  this->direction = {1, 0};
+
+  this->scene.log(make_char_key(L"Θέση", this->symbol), this->position);
+  this->scene.log(make_char_key(L"Κατεύθηνση", this->symbol), this->direction);
+  this->scene.log(make_char_key(L"Είναι παγιδευμένος", this->symbol), this->trapped);
+  this->scene.log(make_char_key(L"Έχει κλειδί", this->symbol), this->has_key);
+  this->scene.log(make_char_key(L"Κατάσταση", this->symbol), this->state);
+  this->scene.log(make_char_key(L"Θέση κλειδιού", this->symbol), this->key_position);
+  this->scene.log(make_char_key(L"Θέση κλουβιού", this->symbol), this->cage_position);
 }
 
 void Character::look_around_from(Point from)
@@ -91,6 +99,13 @@ void Character::set_trapped(const bool trapped)
 
 void Character::update(Character &partner)
 {
+  this->scene.log(make_char_key(L"Θέση", this->symbol), this->position);
+  this->scene.log(make_char_key(L"Κατεύθηνση", this->symbol), this->direction);
+  this->scene.log(make_char_key(L"Είναι παγιδευμένος", this->symbol), this->trapped);
+  this->scene.log(make_char_key(L"Έχει κλειδί", this->symbol), this->has_key);
+  this->scene.log(make_char_key(L"Κατάσταση", this->symbol), this->state);
+  this->scene.log(make_char_key(L"Θέση κλειδιού", this->symbol), this->key_position);
+  this->scene.log(make_char_key(L"Θέση κλουβιού", this->symbol), this->cage_position);
 }
 
 void Character::move(const Point &target_pos)

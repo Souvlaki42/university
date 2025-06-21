@@ -4,9 +4,8 @@
 #include "utils.h"
 #include <set>
 #include <vector>
-#include <unordered_map>
 
-using std::set, std::vector, std::unordered_map;
+using std::set, std::vector;
 
 class Character
 {

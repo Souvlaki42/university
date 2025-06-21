@@ -28,6 +28,8 @@ int main(int argc, char *argv[])
 
     scene.place_characters(grigorakis, asimenia);
 
+    scene.log(L"", L"Πάτα 'q' για να τερματήσεις την προσομοίωση χειροκίνητα.");
+
     initscr();
     cbreak();
     noecho();

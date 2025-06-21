@@ -10,7 +10,9 @@ using std::cout, std::vector, std::string, std::ifstream, std::out_of_range;
 
 Scene::Scene(const std::string &map_path) : moves(0), running(true), winning(false)
 {
-  this->log(L"Κινήσεις", this->moves);
+  this->log(L"Τέρμινα", this->moves);
+  this->log(L"Εκτελείται", this->running);
+  this->log(L"Νικήσαμε", this->winning);
   if (map_path.size() > 4 && map_path.substr(map_path.size() - 4) == ".dat")
   {
     this->loadFromBinary(map_path);
@@ -162,7 +164,9 @@ const bool Scene::is_running() const
 void Scene::update()
 {
   this->moves++;
-  this->log(L"Κινήσεις", this->moves);
+  this->log(L"Τέρμινα", this->moves);
+  this->log(L"Εκτελείται", this->running);
+  this->log(L"Νικήσαμε", this->winning);
   if (getch() == 'q' || this->moves >= MAX_MOVES)
   {
     this->set_winning(false);
@@ -181,38 +185,49 @@ void Scene::render()
     }
   }
 
-  this->draw_debug();
+  if (DEBUGGING_MODE)
+  {
+    this->draw_general_stats_panel();
+    this->draw_character_stats_panel();
+  }
 }
 
-void Scene::draw_debug()
+void Scene::draw_general_stats_panel()
 {
   int screen_height, screen_width;
   getmaxyx(stdscr, screen_height, screen_width);
 
-  const int panel_start_x = this->dimensions.width + 2;
+  // --- Layout for the RIGHT-SIDE panel ---
+  const int panel_start_x = this->dimensions.width + 1;
   const int panel_width = screen_width - panel_start_x;
   const int text_padding = 2;
-
   const int max_text_width = (panel_width > text_padding * 2) ? (panel_width - text_padding * 2) : 0;
+  int current_y = 2;
 
-  for (int y = 1; y < this->dimensions.height - 1; ++y)
+  // --- Clear ONLY the side panel area ---
+  for (int y = 1; y < this->dimensions.height; ++y)
   {
     move(y, panel_start_x + 1);
     clrtoeol();
   }
 
+  // --- Draw Separator ---
   mvvline(1, panel_start_x, ACS_VLINE, this->dimensions.height);
 
-  int current_y = 2;
-  if (max_text_width > 0)
-  {
-    mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΚΑΤΑΣΤΑΣΗ ---");
-    current_y++;
+  if (max_text_width <= 0)
+    return; // Not enough space to draw
 
-    const std::map<std::wstring, std::wstring> &status = this->get_debug_status();
-    for (std::map<std::wstring, std::wstring>::const_iterator it = status.begin(); it != status.end(); ++it)
+  // --- Render ---
+  mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΓΕΝΙΚΑ ---");
+  current_y++;
+
+  const std::map<std::wstring, std::wstring> &status = this->get_debug_status();
+  for (std::map<std::wstring, std::wstring>::const_iterator it = status.begin(); it != status.end(); ++it)
+  {
+    // FILTER: Print only if the key does NOT contain '(', which signifies a character stat.
+    if (it->first.find(L'(') == std::wstring::npos)
     {
-      if (current_y >= this->dimensions.height - 2)
+      if (current_y >= this->dimensions.height - 1)
         break;
 
       std::wstring line = it->first + L": " + it->second;
@@ -222,23 +237,94 @@ void Scene::draw_debug()
       }
       mvaddwstr(current_y++, panel_start_x + text_padding, line.c_str());
     }
+  }
 
-    current_y += 2;
-    mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΣΥΜΒΑΝΤΑ ---");
+  current_y++;
+  if (current_y >= screen_height - 1)
+    return;
+  mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΣΥΜΒΑΝΤΑ ---");
 
-    const std::vector<std::wstring> &events = this->get_event_logs();
-    for (size_t i = 0; i < events.size(); ++i)
+  const std::vector<std::wstring> &events = this->get_event_logs();
+  const int max_event_width = screen_width - text_padding * 2;
+  for (const auto &event_line : events)
+  {
+    if (current_y >= screen_height - 1)
+      break;
+    std::wstring line = event_line;
+    if (line.length() > max_event_width)
+      line = line.substr(0, max_event_width);
+    mvaddwstr(current_y++, panel_start_x + text_padding, line.c_str());
+  }
+}
+
+void Scene::draw_character_stats_panel()
+{
+  int screen_height, screen_width;
+  getmaxyx(stdscr, screen_height, screen_width);
+
+  // --- Layout for the BOTTOM panel ---
+  int panel_start_y = this->dimensions.height + 2;
+  const int text_padding = 2;
+  int current_y = panel_start_y;
+
+  // --- Clear ONLY the bottom panel area ---
+  for (int y = panel_start_y - 1; y < screen_height; ++y)
+  {
+    move(y, 1);
+    clrtoeol();
+  }
+
+  // --- Draw Separator ---
+  mvhline(panel_start_y - 1, 1, ACS_HLINE, screen_width - 2);
+
+  if (current_y >= screen_height)
+    return; // No space to draw at all
+
+  // --- Separate Character Stats into two vectors ---
+  const std::map<std::wstring, std::wstring> &all_status = this->get_debug_status();
+  std::vector<std::wstring> grigorakis_stats;
+  std::vector<std::wstring> asimenia_stats;
+
+  for (auto const &[key, val] : all_status)
+  {
+    if (key.find(L"(G)") != std::wstring::npos)
     {
-      if (current_y >= this->dimensions.height - 2)
-        break;
-
-      std::wstring line = events[i];
-      if (line.length() > max_text_width)
-      {
-        line = line.substr(0, max_text_width);
-      }
-      mvaddwstr(current_y++, panel_start_x + text_padding, line.c_str());
+      grigorakis_stats.push_back(key + L": " + val);
     }
+    else if (key.find(L"(S)") != std::wstring::npos)
+    {
+      asimenia_stats.push_back(key + L": " + val);
+    }
+  }
+
+  // --- Render Character Stats in Two Columns ---
+  mvaddwstr(current_y++, text_padding, L"--- ΧΑΡΑΚΤΗΡΕΣ ---");
+  current_y++;
+
+  const int col_width = (screen_width / 2) - text_padding;
+  const int x_col1 = text_padding;
+  const int x_col2 = (screen_width / 2) + text_padding / 2;
+  size_t max_rows = std::max(grigorakis_stats.size(), asimenia_stats.size());
+
+  for (size_t i = 0; i < max_rows; ++i)
+  {
+    if (current_y >= screen_height - 1)
+      break;
+    if (i < grigorakis_stats.size())
+    {
+      std::wstring line = grigorakis_stats[i];
+      if (line.length() > col_width)
+        line = line.substr(0, col_width);
+      mvaddwstr(current_y, x_col1, line.c_str());
+    }
+    if (i < asimenia_stats.size())
+    {
+      std::wstring line = asimenia_stats[i];
+      if (line.length() > col_width)
+        line = line.substr(0, col_width);
+      mvaddwstr(current_y, x_col2, line.c_str());
+    }
+    current_y++;
   }
 }
 
