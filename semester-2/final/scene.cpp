@@ -7,9 +7,9 @@
 #include "character.h"
 #include "scene.h"
 
-using std::vector, std::string, std::ifstream, std::out_of_range;
+using std::map, std::vector, std::string, std::ifstream, std::out_of_range, std::exception, std::wstring, std::runtime_error, std::ios, std::max, std::pair, std::wstringstream, std::boolalpha;
 
-Scene::Scene(const std::string &map_path)
+Scene::Scene(const string &map_path)
 {
   if (map_path.size() > 4 && map_path.substr(map_path.size() - 4) == ".dat")
   {
@@ -92,7 +92,7 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
 const Dimensions Scene::get_dimensions() const { return this->dimensions; }
 const Point Scene::get_ladder_position() const { return this->ladder_pos; }
 
-void Scene::log_event(const std::wstring &event)
+void Scene::log_event(const wstring &event)
 {
   this->event_logs.insert(this->event_logs.begin(), event);
   if (this->event_logs.size() > MAX_EVENT_LOGS)
@@ -102,30 +102,30 @@ void Scene::log_event(const std::wstring &event)
 }
 
 template <typename T>
-void Scene::log(const std::wstring &key, const T &value)
+void Scene::log(const wstring &key, const T &value)
 {
-  std::wstringstream wss;
-  wss << std::boolalpha;
+  wstringstream wss;
+  wss << boolalpha;
   wss << value;
   this->debug_status[key] = wss.str();
 }
 
-template void Scene::log<int>(const std::wstring &, const int &);
-template void Scene::log<bool>(const std::wstring &, const bool &);
-template void Scene::log<Point>(const std::wstring &, const Point &);
-template void Scene::log<CharacterState>(const std::wstring &, const CharacterState &);
-template void Scene::log<std::wstring>(const std::wstring &, const std::wstring &);
-template void Scene::log<GameState>(const std::wstring &, const GameState &);
+template void Scene::log<int>(const wstring &, const int &);
+template void Scene::log<bool>(const wstring &, const bool &);
+template void Scene::log<Point>(const wstring &, const Point &);
+template void Scene::log<CharacterState>(const wstring &, const CharacterState &);
+template void Scene::log<wstring>(const wstring &, const wstring &);
+template void Scene::log<GameState>(const wstring &, const GameState &);
 
-void Scene::loadFromText(const std::string &path)
+void Scene::loadFromText(const string &path)
 {
-  std::ifstream file(path);
+  ifstream file(path);
   if (!file)
   {
-    throw std::runtime_error("Αδυναμία ανοίγματος αρχείου χάρτη " + path);
+    throw runtime_error("Αδυναμία ανοίγματος αρχείου χάρτη " + path);
   }
 
-  std::string line;
+  string line;
   size_t map_width = 0;
   size_t y_coord = 0;
 
@@ -136,7 +136,7 @@ void Scene::loadFromText(const std::string &path)
       map_width = line.length();
     }
 
-    std::vector<Tile> row;
+    vector<Tile> row;
     row.reserve(map_width);
     for (size_t x_coord = 0; x_coord < line.length(); ++x_coord)
     {
@@ -155,16 +155,16 @@ void Scene::loadFromText(const std::string &path)
 
   if (this->dimensions.width <= 0 || this->dimensions.height <= 0)
   {
-    throw std::runtime_error("Ο χάρτης είναι κενός ή μη έγκυρος.");
+    throw runtime_error("Ο χάρτης είναι κενός ή μη έγκυρος.");
   }
 }
 
-void Scene::loadFromBinary(const std::string &path)
+void Scene::loadFromBinary(const string &path)
 {
-  std::ifstream file(path, std::ios::binary);
+  ifstream file(path, ios::binary);
   if (!file)
   {
-    throw std::runtime_error("Αδυναμία ανοίγματος δυαδικού αρχείου χάρτη " + path);
+    throw runtime_error("Αδυναμία ανοίγματος δυαδικού αρχείου χάρτη " + path);
   }
 
   uint32_t width = 0, height = 0;
@@ -173,17 +173,17 @@ void Scene::loadFromBinary(const std::string &path)
 
   if (!file)
   {
-    throw std::runtime_error("Μη έγκυρη ή κατεστραμμένη κεφαλίδα στο δυαδικό αρχείο " + path);
+    throw runtime_error("Μη έγκυρη ή κατεστραμμένη κεφαλίδα στο δυαδικό αρχείο " + path);
   }
 
   this->dimensions = {width, height};
 
   if (this->dimensions.width <= 0 || this->dimensions.height <= 0)
   {
-    throw std::runtime_error("Ο χάρτης είναι κενός ή μη έγκυρος.");
+    throw runtime_error("Ο χάρτης είναι κενός ή μη έγκυρος.");
   }
 
-  this->contents.resize(height, std::vector<Tile>(width));
+  this->contents.resize(height, vector<Tile>(width));
 
   for (size_t y = 0; y < height; ++y)
   {
@@ -193,7 +193,7 @@ void Scene::loadFromBinary(const std::string &path)
       file.read(&tile_char, sizeof(tile_char));
       if (!file)
       {
-        throw std::runtime_error("Ελλιπή δεδομένα χάρτη στο αρχείο " + path);
+        throw runtime_error("Ελλιπή δεδομένα χάρτη στο αρχείο " + path);
       }
       Tile tile = char_to_tile(tile_char);
       this->contents[y][x] = tile;
@@ -217,7 +217,7 @@ void Scene::placeTileAtRandomCorridor(Tile tileToPlace)
     safety_counter++;
     if (safety_counter > MAX_RAND_PLACEMENTS)
     {
-      throw std::runtime_error("Δεν βρέθηκαν διάδρομοι για την τοποθέτηση των αντικειμένων.");
+      throw runtime_error("Δεν βρέθηκαν διάδρομοι για την τοποθέτηση των αντικειμένων.");
     }
   } while (get_tile(random_pos.x, random_pos.y) != Tile::CORRIDOR);
 
@@ -249,15 +249,15 @@ void Scene::draw_general_stats_panel()
   mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΓΕΝΙΚΑ ---");
   current_y++;
 
-  const std::map<std::wstring, std::wstring> &status = this->debug_status;
-  for (std::map<std::wstring, std::wstring>::const_iterator it = status.begin(); it != status.end(); ++it)
+  const map<wstring, wstring> &status = this->debug_status;
+  for (map<wstring, wstring>::const_iterator it = status.begin(); it != status.end(); ++it)
   {
-    if (it->first.find(L'(') == std::wstring::npos)
+    if (it->first.find(L'(') == wstring::npos)
     {
       if (current_y >= this->dimensions.height - 1)
         break;
 
-      std::wstring line = it->first + L": " + it->second;
+      wstring line = it->first + L": " + it->second;
       if (line.length() > max_text_width)
       {
         line = line.substr(0, max_text_width);
@@ -271,13 +271,13 @@ void Scene::draw_general_stats_panel()
     return;
   mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΣΥΜΒΑΝΤΑ ---");
 
-  const std::vector<std::wstring> &events = this->event_logs;
+  const vector<wstring> &events = this->event_logs;
   const int max_event_width = screen_width - text_padding * 2;
-  for (const auto &event_line : events)
+  for (const wstring &event_line : events)
   {
     if (current_y >= screen_height - 1)
       break;
-    std::wstring line = event_line;
+    wstring line = event_line;
     if (line.length() > max_event_width)
       line = line.substr(0, max_event_width);
     mvaddwstr(current_y++, panel_start_x + text_padding, line.c_str());
@@ -304,17 +304,20 @@ void Scene::draw_character_stats_panel()
   if (current_y >= screen_height)
     return;
 
-  const std::map<std::wstring, std::wstring> &all_status = this->debug_status;
-  std::vector<std::wstring> grigorakis_stats;
-  std::vector<std::wstring> asimenia_stats;
+  const map<wstring, wstring> &all_status = this->debug_status;
+  vector<wstring> grigorakis_stats;
+  vector<wstring> asimenia_stats;
 
-  for (auto const &[key, val] : all_status)
+  for (const pair<const wstring, wstring> &pair : all_status)
   {
-    if (key.find(L"(G)") != std::wstring::npos)
+    const wstring &key = pair.first;
+    const wstring &val = pair.second;
+
+    if (key.find(L"(G)") != wstring::npos)
     {
       grigorakis_stats.push_back(key + L": " + val);
     }
-    else if (key.find(L"(S)") != std::wstring::npos)
+    else if (key.find(L"(S)") != wstring::npos)
     {
       asimenia_stats.push_back(key + L": " + val);
     }
@@ -326,7 +329,7 @@ void Scene::draw_character_stats_panel()
   const int col_width = (screen_width / 2) - text_padding;
   const int x_col1 = text_padding;
   const int x_col2 = (screen_width / 2) + text_padding / 2;
-  size_t max_rows = std::max(grigorakis_stats.size(), asimenia_stats.size());
+  size_t max_rows = max(grigorakis_stats.size(), asimenia_stats.size());
 
   for (size_t i = 0; i < max_rows; ++i)
   {
@@ -334,14 +337,14 @@ void Scene::draw_character_stats_panel()
       break;
     if (i < grigorakis_stats.size())
     {
-      std::wstring line = grigorakis_stats[i];
+      wstring line = grigorakis_stats[i];
       if (line.length() > col_width)
         line = line.substr(0, col_width);
       mvaddwstr(current_y, x_col1, line.c_str());
     }
     if (i < asimenia_stats.size())
     {
-      std::wstring line = asimenia_stats[i];
+      wstring line = asimenia_stats[i];
       if (line.length() > col_width)
         line = line.substr(0, col_width);
       mvaddwstr(current_y, x_col2, line.c_str());

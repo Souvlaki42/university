@@ -3,7 +3,7 @@
 #include "scene.h"
 #include <queue>
 
-using std::vector, std::queue, std::runtime_error;
+using std::vector, std::queue, std::runtime_error, std::pair;
 
 Character::Character(Scene &scene, char symbol, bool has_key, Point position) : scene(scene)
 {
@@ -23,7 +23,7 @@ unordered_map<Point, Tile> Character::look_around_from(Point from)
   vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {1, -1}, {-1, 1}, {-1, -1}, {1, 1}};
   unordered_map<Point, Tile> around;
 
-  for (const auto &dir : directions)
+  for (const Point &dir : directions)
   {
     around.insert({dir, this->scene.get_tile(from.x + dir.x, from.y + dir.y)});
   }
@@ -111,7 +111,7 @@ void Character::update(Character &partner)
   }
 
   unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-  for (const auto &pair : surroundings)
+  for (const pair<Point, Tile> &pair : surroundings)
   {
     Point tile_abs_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
     Tile tile = pair.second;
@@ -179,7 +179,7 @@ void Character::move(const Point &target_pos)
     vector<Point> visited_options;
     unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
 
-    for (const auto &pair : surroundings)
+    for (const pair<Point, Tile> &pair : surroundings)
     {
       if (is_walkable(pair.second))
       {
@@ -250,7 +250,7 @@ Point Character::find_next_step(const Point &goal)
     }
 
     unordered_map<Point, Tile> surroundings = this->look_around_from(current);
-    for (const auto &pair : surroundings)
+    for (const pair<Point, Tile> &pair : surroundings)
     {
       Point next = {current.x + pair.first.x, current.y + pair.first.y};
       if (is_walkable(pair.second) && came_from.find(next) == came_from.end())
