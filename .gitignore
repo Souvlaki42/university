@@ -33,3 +33,6 @@
 
 # Unignore python scripts
 !*.py
+
+# Ignore libraries
+miniaudio.h
