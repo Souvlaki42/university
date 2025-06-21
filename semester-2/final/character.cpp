@@ -179,6 +179,26 @@ void Character::move(const Point &target_pos)
           move_decided = true;
           scene.log_event(L"Αποφάσισα να πάρω το κλειδί τώρα!");
         }
+        else
+        {
+          scene.log_event(L"Αποφάσισα να αφήσω το κλειδί για αργότερα.");
+          vector<Point> avoidance_options;
+          unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
+          for (const pair<Point, Tile> &pair : surroundings)
+          {
+            Point potential_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
+            if (is_walkable(pair.second) && potential_pos != this->key_position)
+            {
+              avoidance_options.push_back(potential_pos);
+            }
+          }
+
+          if (!avoidance_options.empty())
+          {
+            next_pos = avoidance_options[random() % avoidance_options.size()];
+            move_decided = true;
+          }
+        }
       }
     }
 

@@ -7,6 +7,8 @@
 #include "character.h"
 #include "utils.h"
 
+using std::cerr, std::exception, std::string, std::vector;
+
 void process_character_move(Character &character, Character &partner, Scene &scene, GameState &gameState);
 void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, GameState &gameState, int &moves_left);
 void trigger_meetup_sequence(Character &p1, Character &p2, Scene &scene, GameState &gameState);
@@ -19,13 +21,13 @@ int main(int argc, char *argv[])
 
   if (argc < 2)
   {
-    std::cerr << "Σφάλμα: Δεν δόθηκε αρχείο χάρτη.\n";
+    cerr << "Σφάλμα: Δεν δόθηκε αρχείο χάρτη.\n";
     return 1;
   }
 
   try
   {
-    Scene scene = Scene(std::string(argv[1]));
+    Scene scene = Scene(string(argv[1]));
     Character grigorakis = Character(scene, 'G', false);
     Character asimenia = Character(scene, 'S', false);
 
@@ -49,8 +51,16 @@ int main(int argc, char *argv[])
     scene.log(L"Κατάσταση", gameState);
 
     scene.render();
-    grigorakis.render();
-    asimenia.render();
+    if (grigorakis.get_position() == asimenia.get_position())
+    {
+      Point shared_pos = grigorakis.get_position();
+      mvaddch(shared_pos.y + 1, shared_pos.x + 1, '&');
+    }
+    else
+    {
+      grigorakis.render();
+      asimenia.render();
+    }
     refresh();
 
     usleep(FRAME_DELAY_MS);
@@ -82,8 +92,16 @@ int main(int argc, char *argv[])
 
       erase();
       scene.render();
-      grigorakis.render();
-      asimenia.render();
+      if (grigorakis.get_position() == asimenia.get_position())
+      {
+        Point shared_pos = grigorakis.get_position();
+        mvaddch(shared_pos.y + 1, shared_pos.x + 1, '&');
+      }
+      else
+      {
+        grigorakis.render();
+        asimenia.render();
+      }
       refresh();
 
       if (gameState == GameState::LOSING || (gameState == GameState::DONE && moves_left >= 0))
@@ -98,10 +116,10 @@ int main(int argc, char *argv[])
 
     endwin();
   }
-  catch (const std::exception &e)
+  catch (const exception &e)
   {
     endwin();
-    std::cerr << "Ένα ανεπανόρθωτο σφάλμα προέκυψε: " << e.what() << "\n";
+    cerr << "Ένα ανεπανόρθωτο σφάλμα προέκυψε: " << e.what() << "\n";
     return 1;
   }
 
@@ -167,7 +185,7 @@ void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, Game
 
     if (!have_met)
     {
-      std::vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {1, -1}, {-1, 1}, {-1, -1}, {1, 1}};
+      vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {1, -1}, {-1, 1}, {-1, -1}, {1, 1}};
       for (const Point &dir : directions)
       {
         if (p1_pos.x + dir.x == p2_pos.x && p1_pos.y + dir.y == p2_pos.y && !p1_trapped && !p2_trapped)

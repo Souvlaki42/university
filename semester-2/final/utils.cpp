@@ -45,7 +45,7 @@ std::wostream &operator<<(std::wostream &os, const CharacterState &s)
     os << L"Εξερευνώ";
     break;
   case CharacterState::FETCHING_KEY:
-    os << L"Πάω να πάω το κλειδί";
+    os << L"Πάω να πάρω το κλειδί";
     break;
   case CharacterState::GOING_TO_CAGE:
     os << L"Πάω να ξεκλειδώσω το κλουβί";
