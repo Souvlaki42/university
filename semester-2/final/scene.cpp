@@ -22,7 +22,9 @@ Scene::Scene(const std::string &map_path) : moves(0), running(true), winning(fal
     this->loadFromText(map_path);
   }
 
-  this->placeInitialItems();
+  this->placeTileAtRandomCorridor(Tile::TRAP);
+  this->placeTileAtRandomCorridor(Tile::TRAP);
+  this->placeTileAtRandomCorridor(Tile::KEY);
 }
 
 void Scene::loadFromText(const std::string &path)
@@ -130,13 +132,6 @@ void Scene::placeTileAtRandomCorridor(Tile tileToPlace)
   } while (get_tile(random_pos.x, random_pos.y) != Tile::CORRIDOR);
 
   set_tile(random_pos.x, random_pos.y, tileToPlace);
-}
-
-void Scene::placeInitialItems()
-{
-  placeTileAtRandomCorridor(Tile::TRAP);
-  placeTileAtRandomCorridor(Tile::TRAP);
-  placeTileAtRandomCorridor(Tile::KEY);
 }
 
 Scene::~Scene()

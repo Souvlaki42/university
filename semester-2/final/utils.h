@@ -21,6 +21,20 @@ struct Point
   Point operator+(const Point &other) const;
 };
 
+namespace std
+{
+  template <>
+  struct hash<Point>
+  {
+    size_t operator()(const Point &p) const
+    {
+      size_t h1 = std::hash<int>{}(p.x);
+      size_t h2 = std::hash<int>{}(p.y);
+      return h1 ^ (h2 << 1);
+    }
+  };
+}
+
 struct Dimensions
 {
   size_t width, height;

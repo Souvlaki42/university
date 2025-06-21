@@ -24,25 +24,27 @@ Character::Character(Scene &scene, char symbol, bool has_key, Point position) : 
   this->scene.log(make_char_key(L"Θέση κλουβιού", this->symbol), this->cage_position);
 }
 
-void Character::look_around_from(Point from)
+unordered_map<Point, Tile> Character::look_around_from(Point from)
 {
-  if (this->directions.empty())
+  vector<Point> directions;
+  unordered_map<Point, Tile> around;
+
+  directions.push_back({0, -1});  // Πάνω
+  directions.push_back({0, 1});   // Κάτω
+  directions.push_back({-1, 0});  // Αριστερά
+  directions.push_back({1, 0});   // Δεξιά
+  directions.push_back({1, -1});  // Πάνω δεξιά
+  directions.push_back({-1, 1});  // Κάτω αριστερά
+  directions.push_back({-1, -1}); // Πάνω αριστερά
+  directions.push_back({1, 1});   // Κάτω δεξιά
+
+  for (int i = 0; i < directions.size(); i++)
   {
-    this->directions.push_back({0, -1});  // Πάνω
-    this->directions.push_back({0, 1});   // Κάτω
-    this->directions.push_back({-1, 0});  // Αριστερά
-    this->directions.push_back({1, 0});   // Δεξιά
-    this->directions.push_back({1, -1});  // Πάνω δεξιά
-    this->directions.push_back({-1, 1});  // Κάτω αριστερά
-    this->directions.push_back({-1, -1}); // Πάνω αριστερά
-    this->directions.push_back({1, 1});   // Κάτω δεξιά
+    Point dir = directions[i];
+    around.insert({dir, this->scene.get_tile(from.x + dir.x, from.y + dir.y)});
   }
 
-  for (int i = 0; i < this->directions.size(); i++)
-  {
-    Point dir = this->directions[i];
-    this->around.push_back(this->scene.get_tile(from.x + dir.x, from.y + dir.y));
-  }
+  return around;
 }
 
 void Character::render()

@@ -4,8 +4,9 @@
 #include "utils.h"
 #include <set>
 #include <vector>
+#include <unordered_map>
 
-using std::set, std::vector;
+using std::set, std::vector, std::unordered_map;
 
 class Character
 {
@@ -19,14 +20,12 @@ private:
   bool trapped, has_key;
   class Scene &scene;
   set<Point> visited;
-  vector<Point> directions;
-  vector<Tile> around;
 
   const bool is_walkable(const Tile t) const;
   void move(const Point &target_pos = {-1, -1});
 
 public:
-  void look_around_from(Point from);
+  unordered_map<Point, Tile> look_around_from(Point from);
   Character(class Scene &scene, char symbol, bool has_key = false, Point position = {-1, -1});
 
   void update(Character &partner);

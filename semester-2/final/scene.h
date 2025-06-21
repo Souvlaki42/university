@@ -7,7 +7,7 @@
 #include "utils.h"
 #include "character.h"
 
-using std::vector, std::map, std::wstringstream, std::wstring, std::string;
+using std::vector, std::map, std::wstringstream, std::wstring, std::string, std::boolalpha;
 
 class Scene
 {
@@ -23,7 +23,6 @@ private:
 
   void loadFromText(const string &path);
   void loadFromBinary(const string &path);
-  void placeInitialItems();
   void placeTileAtRandomCorridor(Tile tileToPlace);
   void draw_general_stats_panel();
   void draw_character_stats_panel();
@@ -48,7 +47,7 @@ public:
   {
     wstringstream buffer;
 
-    buffer << std::boolalpha;
+    buffer << boolalpha;
 
     (buffer << ... << args);
 
