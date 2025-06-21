@@ -36,11 +36,8 @@ void Scene::render()
     }
   }
 
-  if (DEBUGGING_MODE)
-  {
-    this->draw_general_stats_panel();
-    this->draw_character_stats_panel();
-  }
+  this->draw_general_stats_panel();
+  this->draw_character_stats_panel();
 }
 
 void Scene::place_characters(Character &char1, Character &char2)

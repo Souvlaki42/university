@@ -157,8 +157,10 @@ void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, Game
     bool have_met = false;
     Point p1_pos = p1.get_position();
     Point p2_pos = p2.get_position();
+    bool p1_trapped = p1.is_trapped();
+    bool p2_trapped = p2.is_trapped();
 
-    if (p1_pos == p2_pos)
+    if (p1_pos == p2_pos && !p1_trapped && !p2_trapped)
     {
       have_met = true;
     }
@@ -168,7 +170,7 @@ void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, Game
       std::vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {1, -1}, {-1, 1}, {-1, -1}, {1, 1}};
       for (const Point &dir : directions)
       {
-        if (p1_pos.x + dir.x == p2_pos.x && p1_pos.y + dir.y == p2_pos.y)
+        if (p1_pos.x + dir.x == p2_pos.x && p1_pos.y + dir.y == p2_pos.y && !p1_trapped && !p2_trapped)
         {
           have_met = true;
           break;

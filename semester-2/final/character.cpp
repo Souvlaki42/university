@@ -139,13 +139,6 @@ void Character::update(Character &partner)
         this->state = CharacterState::FETCHING_KEY;
       }
     }
-    else if (this->key_position != Point{-1, -1} && !this->has_key)
-    {
-      if (random() % 2 == 0)
-      {
-        this->state = CharacterState::FETCHING_KEY;
-      }
-    }
   }
 
   switch (this->state)
@@ -176,19 +169,33 @@ void Character::move(const Point &target_pos)
 
   if (target_pos == Point{-1, -1})
   {
-    Point straight_ahead_pos = {this->position.x + this->direction.x, this->position.y + this->direction.y};
-    Tile tile_ahead = this->scene.get_tile(straight_ahead_pos.x, straight_ahead_pos.y);
-
-    if (is_walkable(tile_ahead))
+    if (this->key_position != Point{-1, -1} && !this->has_key)
     {
-      next_pos = straight_ahead_pos;
-      move_decided = true;
+      if (abs(this->position.x - this->key_position.x) <= 1 && abs(this->position.y - this->key_position.y) <= 1)
+      {
+        if (random() % 2 == 0)
+        {
+          next_pos = this->key_position;
+          move_decided = true;
+          scene.log_event(L"Αποφάσισα να πάρω το κλειδί τώρα!");
+        }
+      }
+    }
+
+    if (!move_decided)
+    {
+      Point straight_ahead_pos = {this->position.x + this->direction.x, this->position.y + this->direction.y};
+      Tile tile_ahead = this->scene.get_tile(straight_ahead_pos.x, straight_ahead_pos.y);
+      if (is_walkable(tile_ahead))
+      {
+        next_pos = straight_ahead_pos;
+        move_decided = true;
+      }
     }
 
     if (!move_decided)
     {
       vector<Point> unvisited_options;
-      vector<Point> visited_options;
       unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
       for (const pair<Point, Tile> &pair : surroundings)
       {
