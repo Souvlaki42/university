@@ -48,10 +48,13 @@ std::wostream &operator<<(std::wostream &os, const CharacterState &s)
     os << L"Πάω να πάω το κλειδί...";
     break;
   case CharacterState::GOING_TO_CAGE:
-    os << L"Πάω να ξεκληδώσω το κλουβί...";
+    os << L"Πάω να ξεκλειδώσω το κλουβί...";
     break;
-  case CharacterState::EXITING:
-    os << L"Φέυγω...";
+  case CharacterState::GOING_TO_LADDER:
+    os << L"Πάω στην σκάλα...";
+    break;
+  case CharacterState::IDLE:
+    os << L"Δεν κάνω τίποτα...";
     break;
   default:
     os << L"Λάθος κατάσταση";

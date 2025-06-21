@@ -5,8 +5,10 @@
 #include <locale.h>
 #include "scene.h"
 #include "character.h"
+#include "utils.h"
 
-using std::cerr, std::string;
+static void process_character_move(Character &character, Character &partner, Scene &scene, GameState &gameState);
+static void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, GameState &gameState, int &moves_left);
 
 //! Οδηγίες: https://docs.google.com/document/d/12qdicYiuhyEsiSzJqg7Vp2uN0f_mEO32C6b3-flJtj0/edit?tab=t.0
 int main(int argc, char *argv[])
@@ -16,19 +18,20 @@ int main(int argc, char *argv[])
 
   if (argc < 2)
   {
-    cerr << "Σφάλμα: Δεν δόθηκε αρχείο χάρτη.\n";
+    std::cerr << "Σφάλμα: Δεν δόθηκε αρχείο χάρτη.\n";
     return 1;
   }
 
   try
   {
-    Scene scene = Scene(string(argv[1]));
-    Character grigorakis = Character(scene, 'G');
-    Character asimenia = Character(scene, 'S');
+    Scene scene = Scene(std::string(argv[1]));
+    Character grigorakis = Character(scene, 'G', false);
+    Character asimenia = Character(scene, 'S', false);
 
     scene.place_characters(grigorakis, asimenia);
 
-    scene.log(L"", L"Πάτα 'q' για να τερματήσεις την προσομοίωση χειροκίνητα.");
+    GameState gameState = GameState::RUNNING;
+    int moves_left = MAX_MOVES;
 
     initscr();
     cbreak();
@@ -39,24 +42,44 @@ int main(int argc, char *argv[])
     leaveok(stdscr, true);
     scrollok(stdscr, false);
 
-    scene.render();
-    grigorakis.render();
-    asimenia.render();
-    refresh();
+    scene.log_event(L"Πάτα 'q' για να τερματήσεις την προσομοίωση χειροκίνητα.");
 
-    usleep(FRAME_DELAY_MS);
-
-    while (scene.is_running())
+    while (gameState != GameState::DONE)
     {
-      grigorakis.update(asimenia);
-      asimenia.update(grigorakis);
-      scene.update();
+      if (getch() == 'q')
+      {
+        break;
+      }
+
+      if (gameState == GameState::RUNNING || gameState == GameState::WINNING)
+      {
+        grigorakis.update(asimenia);
+        process_character_move(grigorakis, asimenia, scene, gameState);
+
+        if (gameState == GameState::RUNNING || gameState == GameState::WINNING)
+        {
+          asimenia.update(grigorakis);
+          process_character_move(asimenia, grigorakis, scene, gameState);
+        }
+
+        moves_left--;
+        scene.update_moves_counter(moves_left);
+
+        check_game_over_conditions(grigorakis, asimenia, scene, gameState, moves_left);
+      }
 
       erase();
       scene.render();
       grigorakis.render();
       asimenia.render();
       refresh();
+
+      if (gameState == GameState::LOSING || (gameState == GameState::DONE && moves_left >= 0))
+      {
+        timeout(-1);
+        getch();
+        break;
+      }
 
       usleep(FRAME_DELAY_MS);
     }
@@ -66,9 +89,88 @@ int main(int argc, char *argv[])
   catch (const std::exception &e)
   {
     endwin();
-    cerr << "Ένα ανεπανόρθωτο σφάλμα προέκυψε: " << e.what() << "\n";
+    std::cerr << "Ένα ανεπανόρθωτο σφάλμα προέκυψε: " << e.what() << "\n";
     return 1;
   }
 
   return 0;
+}
+
+void process_character_move(Character &character, Character &partner, Scene &scene, GameState &gameState)
+{
+  if (gameState == GameState::LOSING || gameState == GameState::DONE)
+    return;
+
+  Point pos = character.get_position();
+  Tile tile_at_pos = scene.get_tile(pos.x, pos.y);
+
+  if (tile_at_pos == Tile::TRAP)
+  {
+    if (character.get_has_key())
+    {
+      scene.log_event(L"ΑΠΟΤΥΧΙΑ: Ο χαρακτήρας έπεσε σε παγίδα ενώ είχε το κλειδί!");
+      gameState = GameState::LOSING;
+    }
+    else
+    {
+      character.set_trapped(true);
+      scene.set_tile(pos.x, pos.y, Tile::CAGE);
+      scene.log_event(L"Ένας χαρακτήρας παγιδεύτηκε!");
+    }
+  }
+  else if (tile_at_pos == Tile::KEY)
+  {
+    character.set_has_key(true);
+    scene.set_tile(pos.x, pos.y, Tile::CORRIDOR);
+    scene.log_event(L"Το κλειδί βρέθηκε!");
+    if (character.get_state() == CharacterState::FETCHING_KEY)
+    {
+      character.set_state(CharacterState::GOING_TO_CAGE);
+    }
+  }
+  else if (tile_at_pos == Tile::CAGE)
+  {
+    if (character.get_has_key() && partner.is_trapped())
+    {
+      scene.log_event(L"ΝΙΚΗ: Οι χαρακτήρες συναντήθηκαν! Τώρα προς τη σκάλα!");
+      gameState = GameState::WINNING;
+      partner.set_trapped(false);
+      scene.set_tile(pos.x, pos.y, Tile::CORRIDOR);
+      scene.remove_obstacles();
+      character.set_state(CharacterState::GOING_TO_LADDER);
+      partner.set_state(CharacterState::GOING_TO_LADDER);
+    }
+  }
+}
+
+void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, GameState &gameState, int &moves_left)
+{
+  if (gameState == GameState::LOSING || gameState == GameState::DONE)
+    return;
+
+  if (p1.is_trapped() && p2.is_trapped())
+  {
+    gameState = GameState::LOSING;
+    scene.log_event(L"ΑΠΟΤΥΧΙΑ: Και οι δύο χαρακτήρες παγιδεύτηκαν!");
+  }
+  else if ((p1.is_trapped() && p1.get_has_key()) || (p2.is_trapped() && p2.get_has_key()))
+  {
+    gameState = GameState::LOSING;
+    scene.log_event(L"ΑΠΟΤΥΧΙΑ: Ο χαρακτήρας με το κλειδί παγιδεύτηκε!");
+  }
+  else if (moves_left <= 0)
+  {
+    gameState = GameState::LOSING;
+    scene.log_event(L"ΑΠΟΤΥΧΙΑ: Ο χρόνος τελείωσε!");
+  }
+
+  if (gameState == GameState::WINNING)
+  {
+    Point ladder_pos = scene.get_ladder_position();
+    if (p1.get_position() == ladder_pos && p2.get_position() == ladder_pos)
+    {
+      gameState = GameState::DONE;
+      scene.log_event(L"ΝΙΚΗ: Το βασίλειο σώθηκε!");
+    }
+  }
 }

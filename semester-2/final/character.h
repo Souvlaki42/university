@@ -2,11 +2,10 @@
 #define CHARACTER
 
 #include "utils.h"
-#include <set>
-#include <vector>
+#include <unordered_set>
 #include <unordered_map>
 
-using std::set, std::vector, std::unordered_map;
+using std::unordered_set, std::unordered_map;
 
 class Character
 {
@@ -17,25 +16,33 @@ private:
   Point key_position;
   CharacterState state;
   char symbol;
-  bool trapped, has_key;
+  bool trapped;
+  bool has_key;
   class Scene &scene;
-  set<Point> visited;
+  unordered_set<Point> visited;
 
+  void log_state();
+  Point find_next_step(const Point &goal);
   const bool is_walkable(const Tile t) const;
-  void move(const Point &target_pos = {-1, -1});
+  std::unordered_map<Point, Tile> look_around_from(Point from);
 
 public:
-  unordered_map<Point, Tile> look_around_from(Point from);
-  Character(class Scene &scene, char symbol, bool has_key = false, Point position = {-1, -1});
+  Character(Scene &scene, char symbol, bool has_key, Point position = {-1, -1});
 
-  void update(Character &partner);
   void render();
+  void update(Character &partner);
+  void move(const Point &target_pos = {-1, -1});
 
   const Point get_position() const;
-  void set_position(const Point &new_pos = Point{-1, -1});
+  void set_position(const Point &new_pos = {-1, -1});
 
   const bool is_trapped() const;
   void set_trapped(const bool trapped);
+
+  bool get_has_key() const;
+  void set_has_key(bool status);
+  CharacterState get_state() const;
+  void set_state(CharacterState new_state);
 };
 
 #endif

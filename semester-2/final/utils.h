@@ -56,7 +56,16 @@ enum class CharacterState
   EXPLORING,
   FETCHING_KEY,
   GOING_TO_CAGE,
-  EXITING
+  GOING_TO_LADDER,
+  IDLE
+};
+
+enum class GameState
+{
+  RUNNING,
+  WINNING,
+  LOSING,
+  DONE
 };
 
 std::wostream &operator<<(std::wostream &os, const Point &p);

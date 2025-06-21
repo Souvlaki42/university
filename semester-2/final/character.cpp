@@ -1,8 +1,9 @@
 #include <cursesw.h>
 #include "character.h"
 #include "scene.h"
+#include <queue>
 
-using std::vector, std::set;
+using std::vector, std::queue, std::runtime_error;
 
 Character::Character(Scene &scene, char symbol, bool has_key, Point position) : scene(scene)
 {
@@ -14,7 +15,24 @@ Character::Character(Scene &scene, char symbol, bool has_key, Point position) : 
   this->state = CharacterState::EXPLORING;
   this->key_position = {-1, -1};
   this->cage_position = {-1, -1};
+  this->log_state();
+}
 
+unordered_map<Point, Tile> Character::look_around_from(Point from)
+{
+  vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {1, -1}, {-1, 1}, {-1, -1}, {1, 1}};
+  unordered_map<Point, Tile> around;
+
+  for (const auto &dir : directions)
+  {
+    around.insert({dir, this->scene.get_tile(from.x + dir.x, from.y + dir.y)});
+  }
+
+  return around;
+}
+
+void Character::log_state()
+{
   this->scene.log(make_char_key(L"Θέση", this->symbol), this->position);
   this->scene.log(make_char_key(L"Κατεύθηνση", this->symbol), this->direction);
   this->scene.log(make_char_key(L"Είναι παγιδευμένος", this->symbol), this->trapped);
@@ -24,32 +42,9 @@ Character::Character(Scene &scene, char symbol, bool has_key, Point position) : 
   this->scene.log(make_char_key(L"Θέση κλουβιού", this->symbol), this->cage_position);
 }
 
-unordered_map<Point, Tile> Character::look_around_from(Point from)
-{
-  vector<Point> directions;
-  unordered_map<Point, Tile> around;
-
-  directions.push_back({0, -1});  // Πάνω
-  directions.push_back({0, 1});   // Κάτω
-  directions.push_back({-1, 0});  // Αριστερά
-  directions.push_back({1, 0});   // Δεξιά
-  directions.push_back({1, -1});  // Πάνω δεξιά
-  directions.push_back({-1, 1});  // Κάτω αριστερά
-  directions.push_back({-1, -1}); // Πάνω αριστερά
-  directions.push_back({1, 1});   // Κάτω δεξιά
-
-  for (int i = 0; i < directions.size(); i++)
-  {
-    Point dir = directions[i];
-    around.insert({dir, this->scene.get_tile(from.x + dir.x, from.y + dir.y)});
-  }
-
-  return around;
-}
-
 void Character::render()
 {
-  mvaddch(this->position.y, this->position.x, this->trapped ? tile_to_char(Tile::CAGE) : this->symbol);
+  mvaddch(this->position.y + 1, this->position.x + 1, this->trapped ? tile_to_char(Tile::CAGE) : this->symbol);
 }
 
 const Point Character::get_position() const
@@ -76,7 +71,7 @@ void Character::set_position(const Point &new_pos)
     safety_counter++;
     if (safety_counter > MAX_RAND_PLACEMENTS)
     {
-      throw std::runtime_error("Δεν βρέθηκαν διάδρομοι για την τοποθέτηση τών χαρακτήρων.");
+      throw runtime_error("Δεν βρέθηκαν διάδρομοι για την τοποθέτηση των χαρακτήρων.");
     }
   } while (this->scene.get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR);
 
@@ -97,19 +92,174 @@ const bool Character::is_walkable(const Tile t) const
 void Character::set_trapped(const bool trapped)
 {
   this->trapped = trapped;
+  if (trapped)
+    this->state = CharacterState::IDLE;
 }
+
+bool Character::get_has_key() const { return this->has_key; }
+void Character::set_has_key(bool status) { this->has_key = status; }
+CharacterState Character::get_state() const { return this->state; }
+void Character::set_state(CharacterState new_state) { this->state = new_state; }
 
 void Character::update(Character &partner)
 {
-  this->scene.log(make_char_key(L"Θέση", this->symbol), this->position);
-  this->scene.log(make_char_key(L"Κατεύθηνση", this->symbol), this->direction);
-  this->scene.log(make_char_key(L"Είναι παγιδευμένος", this->symbol), this->trapped);
-  this->scene.log(make_char_key(L"Έχει κλειδί", this->symbol), this->has_key);
-  this->scene.log(make_char_key(L"Κατάσταση", this->symbol), this->state);
-  this->scene.log(make_char_key(L"Θέση κλειδιού", this->symbol), this->key_position);
-  this->scene.log(make_char_key(L"Θέση κλουβιού", this->symbol), this->cage_position);
+  if (this->trapped)
+  {
+    this->state = CharacterState::IDLE;
+    log_state();
+    return;
+  }
+
+  unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
+  for (const auto &pair : surroundings)
+  {
+    Point tile_abs_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
+    Tile tile = pair.second;
+
+    if (tile == Tile::KEY && this->key_position == Point{-1, -1})
+    {
+      this->key_position = tile_abs_pos;
+    }
+    else if (tile == Tile::CAGE && this->cage_position == Point{-1, -1})
+    {
+      this->cage_position = tile_abs_pos;
+    }
+  }
+
+  if (this->state == CharacterState::EXPLORING)
+  {
+    if (this->cage_position != Point{-1, -1})
+    {
+      if (this->has_key)
+      {
+        this->state = CharacterState::GOING_TO_CAGE;
+      }
+      else if (this->key_position != Point{-1, -1})
+      {
+        this->state = CharacterState::FETCHING_KEY;
+      }
+    }
+    else if (this->key_position != Point{-1, -1} && !this->has_key)
+    {
+      if (random() % 2 == 0)
+      {
+        this->state = CharacterState::FETCHING_KEY;
+      }
+    }
+  }
+
+  switch (this->state)
+  {
+  case CharacterState::EXPLORING:
+    this->move({-1, -1});
+    break;
+  case CharacterState::FETCHING_KEY:
+    this->move(this->key_position);
+    break;
+  case CharacterState::GOING_TO_CAGE:
+    this->move(this->cage_position);
+    break;
+  case CharacterState::GOING_TO_LADDER:
+    this->move(this->scene.get_ladder_position());
+    break;
+  case CharacterState::IDLE:
+    break;
+  }
+
+  log_state();
 }
 
 void Character::move(const Point &target_pos)
 {
+  Point next_pos = {-1, -1};
+
+  if (target_pos == Point{-1, -1})
+  {
+    vector<Point> unvisited_options;
+    vector<Point> visited_options;
+    unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
+
+    for (const auto &pair : surroundings)
+    {
+      if (is_walkable(pair.second))
+      {
+        Point potential_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
+        if (this->visited.find(potential_pos) == this->visited.end())
+        {
+          unvisited_options.push_back(potential_pos);
+        }
+        else
+        {
+          visited_options.push_back(potential_pos);
+        }
+      }
+    }
+
+    if (!unvisited_options.empty())
+    {
+      next_pos = unvisited_options[random() % unvisited_options.size()];
+    }
+    else if (!visited_options.empty())
+    {
+      next_pos = visited_options[random() % visited_options.size()];
+    }
+  }
+  else
+  {
+    next_pos = find_next_step(target_pos);
+    if (next_pos == Point{-1, -1})
+    {
+      this->scene.log_event(L"Δεν βρέθηκε μονοπάτι, η εξερεύνηση συνεχίζεται.");
+      this->state = CharacterState::EXPLORING;
+    }
+  }
+
+  if (next_pos != Point{-1, -1} && next_pos != this->position)
+  {
+    this->direction = {next_pos.x - this->position.x, next_pos.y - this->position.y};
+    this->set_position(next_pos);
+  }
+}
+
+Point Character::find_next_step(const Point &goal)
+{
+  if (this->position == goal)
+    return this->position;
+
+  queue<Point> q;
+  q.push(this->position);
+
+  unordered_map<Point, Point> came_from;
+  came_from[this->position] = {-1, -1};
+
+  while (!q.empty())
+  {
+    Point current = q.front();
+    q.pop();
+
+    if (current == goal)
+    {
+      Point step = goal;
+      while (came_from.count(step) && came_from[step] != this->position)
+      {
+        step = came_from[step];
+        if (step == Point{-1, -1})
+          return {-1, -1};
+      }
+      return step;
+    }
+
+    unordered_map<Point, Tile> surroundings = this->look_around_from(current);
+    for (const auto &pair : surroundings)
+    {
+      Point next = {current.x + pair.first.x, current.y + pair.first.y};
+      if (is_walkable(pair.second) && came_from.find(next) == came_from.end())
+      {
+        q.push(next);
+        came_from[next] = current;
+      }
+    }
+  }
+
+  return {-1, -1};
 }
