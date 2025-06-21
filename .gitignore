@@ -6,10 +6,7 @@
 !*.cpp
 !*.h
 !*.hpp
-!justfile
-
-# Unignore vscode config
-!.vscode/*
+!Makefile
 
 # Unignore README.md
 !README.md
@@ -21,11 +18,21 @@
 !*.wav
 !*.mp3
 
+# Unignore maps
+!map*.txt
+!map*.dat
+
+# Unignore presentation pdfs
+!presentation.pdf
+
 # Unignore LICENSE
 !LICENSE
 
 # Unignore all dirs
 !*/
+
+# Unignore python scripts
+!*.py
 
 # Ignore libraries
 miniaudio.h
