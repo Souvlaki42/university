@@ -72,20 +72,20 @@ void Scene::remove_obstacles(const Point &player1_pos, const Point &player2_pos)
   this->log_event(L"Οι τοίχοι και οι παγίδες εξαφανίστηκαν!");
 }
 
-const Tile Scene::get_tile(int x, int y) const
+Tile Scene::get_tile(size_t x, size_t y) const
 {
-  if (y < 0 || y >= this->contents.size() ||
-      x < 0 || x >= this->contents[y].size())
+  if (y >= this->contents.size() ||
+      x >= this->contents[y].size())
   {
     return Tile::NONE;
   }
   return this->contents[y][x];
 }
 
-void Scene::set_tile(int x, int y, const Tile &newTile)
+void Scene::set_tile(size_t x, size_t y, const Tile &newTile)
 {
-  if (y >= 0 && y < this->contents.size() &&
-      x >= 0 && x < this->contents[y].size())
+  if (y < this->contents.size() &&
+      x < this->contents[y].size())
   {
     this->contents[y][x] = newTile;
   }
@@ -234,10 +234,10 @@ void Scene::draw_general_stats_panel()
   const int panel_start_x = this->dimensions.width + 1;
   const int panel_width = screen_width - panel_start_x;
   const int text_padding = 2;
-  const int max_text_width = (panel_width > text_padding * 2) ? (panel_width - text_padding * 2) : 0;
-  int current_y = 2;
+  const size_t max_text_width = (panel_width > text_padding * 2) ? (panel_width - text_padding * 2) : 0;
+  size_t current_y = 2;
 
-  for (int y = 1; y < this->dimensions.height; ++y)
+  for (size_t y = 1; y < this->dimensions.height; ++y)
   {
     move(y, panel_start_x + 1);
     clrtoeol();
@@ -269,15 +269,15 @@ void Scene::draw_general_stats_panel()
   }
 
   current_y++;
-  if (current_y >= screen_height - 1)
+  if (safe_to_int(current_y) >= screen_height - 1)
     return;
   mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΣΥΜΒΑΝΤΑ ---");
 
   const vector<wstring> &events = this->event_logs;
-  const int max_event_width = screen_width - text_padding * 2;
+  const size_t max_event_width = screen_width - text_padding * 2;
   for (const wstring &event_line : events)
   {
-    if (current_y >= screen_height - 1)
+    if (safe_to_int(current_y) >= screen_height - 1)
       break;
     wstring line = event_line;
     if (line.length() > max_event_width)
@@ -295,7 +295,7 @@ void Scene::draw_character_stats_panel()
   const int text_padding = 2;
   int current_y = panel_start_y;
 
-  for (int y = panel_start_y - 1; y < screen_height; ++y)
+  for (auto y = panel_start_y - 1; y < screen_height; ++y)
   {
     move(y, 1);
     clrtoeol();
@@ -310,25 +310,22 @@ void Scene::draw_character_stats_panel()
   vector<wstring> grigorakis_stats;
   vector<wstring> asimenia_stats;
 
-  for (const pair<const wstring, wstring> &pair : all_status)
+  for (const auto &[key, value] : all_status)
   {
-    const wstring &key = pair.first;
-    const wstring &val = pair.second;
-
     if (key.find(L"(G)") != wstring::npos)
     {
-      grigorakis_stats.push_back(key + L": " + val);
+      grigorakis_stats.push_back(key + L": " + value);
     }
     else if (key.find(L"(S)") != wstring::npos)
     {
-      asimenia_stats.push_back(key + L": " + val);
+      asimenia_stats.push_back(key + L": " + value);
     }
   }
 
   mvaddwstr(current_y++, text_padding, L"--- ΧΑΡΑΚΤΗΡΕΣ ---");
   current_y++;
 
-  const int col_width = (screen_width / 2) - text_padding;
+  const size_t col_width = (screen_width / 2) - text_padding;
   const int x_col1 = text_padding;
   const int x_col2 = (screen_width / 2) + text_padding / 2;
   size_t max_rows = max(grigorakis_stats.size(), asimenia_stats.size());

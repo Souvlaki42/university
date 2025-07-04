@@ -77,4 +77,6 @@ Tile char_to_tile(char c);
 
 std::wstring make_char_key(const std::wstring &base_text, char symbol);
 
+int safe_to_int(size_t val);
+
 #endif
