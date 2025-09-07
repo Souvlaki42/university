@@ -1,7 +1,6 @@
 #include "utils.h"
 #include <ostream>
 #include <sstream>
-#include <limits>
 
 bool Point::operator==(const Point &other) const
 {
@@ -134,13 +133,4 @@ std::wstring make_char_key(const std::wstring &base_text, char symbol)
   std::wstringstream ss;
   ss << base_text << L" (" << symbol << L')';
   return ss.str();
-}
-
-int safe_to_int(size_t val)
-{
-  if (val > static_cast<size_t>(std::numeric_limits<int>::max()))
-  {
-    throw std::overflow_error("Δεν μπορεί να γίνει μετατροπή σε int από size_t.");
-  }
-  return static_cast<int>(val);
 }

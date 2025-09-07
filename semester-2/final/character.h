@@ -24,7 +24,7 @@ private:
 
   void log_state();
   Point find_next_step(const Point &goal);
-  bool is_walkable(const Tile t) const;
+  const bool is_walkable(const Tile t) const;
   unordered_map<Point, Tile> look_around_from(Point from);
 
 public:
@@ -37,7 +37,7 @@ public:
   const Point get_position() const;
   void set_position(const Point &new_pos = {-1, -1});
 
-  bool is_trapped() const;
+  const bool is_trapped() const;
   void set_trapped(const bool trapped);
 
   bool get_has_key() const;

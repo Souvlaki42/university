@@ -80,12 +80,12 @@ void Character::set_position(const Point &new_pos)
   this->visited_counts[tmp_pos] = 1;
 }
 
-bool Character::is_trapped() const
+const bool Character::is_trapped() const
 {
   return this->trapped;
 }
 
-bool Character::is_walkable(const Tile t) const
+const bool Character::is_walkable(const Tile t) const
 {
   return t == Tile::CORRIDOR || t == Tile::KEY || t == Tile::LADDER || t == Tile::TRAP || (this->has_key && t == Tile::CAGE);
 }
@@ -112,9 +112,10 @@ void Character::update(Character &partner)
   }
 
   unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-  for (const auto &[pos, tile] : surroundings)
+  for (const pair<Point, Tile> &pair : surroundings)
   {
-    Point tile_abs_pos = {this->position.x + pos.x, this->position.y + pos.y};
+    Point tile_abs_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
+    Tile tile = pair.second;
 
     if (tile == Tile::KEY && this->key_position == Point{-1, -1})
     {
@@ -184,10 +185,10 @@ void Character::move(const Point &target_pos)
           scene.log_event(L"Αποφάσισα να αφήσω το κλειδί για αργότερα.");
           vector<Point> avoidance_options;
           unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-          for (const auto &[pos, tile] : surroundings)
+          for (const pair<Point, Tile> &pair : surroundings)
           {
-            Point potential_pos = {this->position.x + pos.x, this->position.y + pos.y};
-            if (is_walkable(tile) && potential_pos != this->key_position)
+            Point potential_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
+            if (is_walkable(pair.second) && potential_pos != this->key_position)
             {
               avoidance_options.push_back(potential_pos);
             }
@@ -217,11 +218,11 @@ void Character::move(const Point &target_pos)
     {
       vector<Point> unvisited_options;
       unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-      for (const auto &[pos, tile] : surroundings)
+      for (const pair<Point, Tile> &pair : surroundings)
       {
-        if (is_walkable(tile))
+        if (is_walkable(pair.second))
         {
-          Point potential_pos = {this->position.x + pos.x, this->position.y + pos.y};
+          Point potential_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
           if (this->visited_counts.find(potential_pos) == this->visited_counts.end())
           {
             unvisited_options.push_back(potential_pos);
@@ -239,11 +240,11 @@ void Character::move(const Point &target_pos)
     {
       vector<Point> visited_options;
       unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-      for (const auto &[pos, tile] : surroundings)
+      for (const pair<Point, Tile> &pair : surroundings)
       {
-        if (is_walkable(tile))
+        if (is_walkable(pair.second))
         {
-          visited_options.push_back({this->position.x + pos.x, this->position.y + pos.y});
+          visited_options.push_back({this->position.x + pair.first.x, this->position.y + pair.first.y});
         }
       }
 
@@ -319,10 +320,10 @@ Point Character::find_next_step(const Point &goal)
     }
 
     unordered_map<Point, Tile> surroundings = this->look_around_from(current);
-    for (const auto &[pos, tile] : surroundings)
+    for (const pair<Point, Tile> &pair : surroundings)
     {
-      Point next = {current.x + pos.x, current.y + pos.y};
-      if (is_walkable(tile) && came_from.find(next) == came_from.end())
+      Point next = {current.x + pair.first.x, current.y + pair.first.y};
+      if (is_walkable(pair.second) && came_from.find(next) == came_from.end())
       {
         q.push(next);
         came_from[next] = current;
