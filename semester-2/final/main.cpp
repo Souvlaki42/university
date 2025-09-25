@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <iostream>
 #include <string>
-#include <locale.h>
 #include "scene.h"
 #include "character.h"
 #include "utils.h"
@@ -16,7 +15,6 @@ void trigger_meetup_sequence(Character &p1, Character &p2, Scene &scene, GameSta
 //! Οδηγίες: https://docs.google.com/document/d/12qdicYiuhyEsiSzJqg7Vp2uN0f_mEO32C6b3-flJtj0/edit?tab=t.0
 int main(int argc, char *argv[])
 {
-  setlocale(LC_ALL, "");
   srandom(time(NULL));
 
   if (argc < 2)
@@ -46,16 +44,8 @@ int main(int argc, char *argv[])
     scrollok(stdscr, false);
 
     scene.render();
-    if (grigorakis.get_position() == asimenia.get_position())
-    {
-      Point shared_pos = grigorakis.get_position();
-      mvaddch(shared_pos.y + 1, shared_pos.x + 1, '&');
-    }
-    else
-    {
-      grigorakis.render();
-      asimenia.render();
-    }
+    grigorakis.render();
+    asimenia.render();
     refresh();
 
     usleep(FRAME_DELAY_MS);
@@ -85,16 +75,8 @@ int main(int argc, char *argv[])
 
       erase();
       scene.render();
-      if (grigorakis.get_position() == asimenia.get_position())
-      {
-        Point shared_pos = grigorakis.get_position();
-        mvaddch(shared_pos.y + 1, shared_pos.x + 1, '&');
-      }
-      else
-      {
-        grigorakis.render();
-        asimenia.render();
-      }
+      grigorakis.render();
+      asimenia.render();
       refresh();
 
       if (gameState == GameState::LOSING || (gameState == GameState::DONE && moves_left >= 0))

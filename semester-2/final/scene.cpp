@@ -27,7 +27,6 @@ Scene::Scene(const string &map_path)
 
 void Scene::render()
 {
-  box(stdscr, 0, 0);
   for (size_t y = 0; y < this->contents.size(); ++y)
   {
     for (size_t x = 0; x < this->contents[y].size(); ++x)
