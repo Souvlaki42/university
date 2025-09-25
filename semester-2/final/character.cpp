@@ -20,7 +20,7 @@ Character::Character(Scene &scene, char symbol, bool has_key, Point position) : 
 
 unordered_map<Point, Tile> Character::look_around_from(Point from)
 {
-  vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {1, -1}, {-1, 1}, {-1, -1}, {1, 1}};
+  vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
   unordered_map<Point, Tile> around;
 
   for (const Point &dir : directions)
@@ -149,37 +149,6 @@ void Character::move(const Point &target_pos)
 
   if (target_pos == Point{-1, -1})
   {
-    if (this->key_position != Point{-1, -1} && !this->has_key)
-    {
-      if (abs(this->position.x - this->key_position.x) <= 1 && abs(this->position.y - this->key_position.y) <= 1)
-      {
-        if (random() % 2 == 0)
-        {
-          next_pos = this->key_position;
-          move_decided = true;
-        }
-        else
-        {
-          vector<Point> avoidance_options;
-          unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-          for (const pair<Point, Tile> &pair : surroundings)
-          {
-            Point potential_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
-            if (is_walkable(pair.second) && potential_pos != this->key_position)
-            {
-              avoidance_options.push_back(potential_pos);
-            }
-          }
-
-          if (!avoidance_options.empty())
-          {
-            next_pos = avoidance_options[random() % avoidance_options.size()];
-            move_decided = true;
-          }
-        }
-      }
-    }
-
     if (!move_decided)
     {
       Point straight_ahead_pos = {this->position.x + this->direction.x, this->position.y + this->direction.y};
@@ -193,42 +162,20 @@ void Character::move(const Point &target_pos)
 
     if (!move_decided)
     {
-      vector<Point> unvisited_options;
+      vector<Point> candidate_options;
       unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
       for (const pair<Point, Tile> &pair : surroundings)
       {
         if (is_walkable(pair.second))
         {
-          Point potential_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
-          if (this->visited_counts.find(potential_pos) == this->visited_counts.end())
-          {
-            unvisited_options.push_back(potential_pos);
-          }
-        }
-      }
-      if (!unvisited_options.empty())
-      {
-        next_pos = unvisited_options[random() % unvisited_options.size()];
-        move_decided = true;
-      }
-    }
-
-    if (!move_decided)
-    {
-      vector<Point> visited_options;
-      unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-      for (const pair<Point, Tile> &pair : surroundings)
-      {
-        if (is_walkable(pair.second))
-        {
-          visited_options.push_back({this->position.x + pair.first.x, this->position.y + pair.first.y});
+          candidate_options.push_back({this->position.x + pair.first.x, this->position.y + pair.first.y});
         }
       }
 
-      if (!visited_options.empty())
+      if (!candidate_options.empty())
       {
         int min_visits = -1;
-        for (const Point &pos : visited_options)
+        for (const Point &pos : candidate_options)
         {
           int current_visits = this->visited_counts[pos];
           if (min_visits == -1 || current_visits < min_visits)
@@ -238,7 +185,7 @@ void Character::move(const Point &target_pos)
         }
 
         vector<Point> least_visited_options;
-        for (const Point &pos : visited_options)
+        for (const Point &pos : candidate_options)
         {
           if (this->visited_counts[pos] == min_visits)
           {

@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
     while (gameState != GameState::DONE)
     {
-      if (getch() == 'q')
+      if (getch() == 27)
       {
         break;
       }
@@ -153,19 +153,6 @@ void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, Game
     if (p1_pos == p2_pos && !p1_trapped && !p2_trapped)
     {
       have_met = true;
-    }
-
-    if (!have_met)
-    {
-      vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}, {1, -1}, {-1, 1}, {-1, -1}, {1, 1}};
-      for (const Point &dir : directions)
-      {
-        if (p1_pos.x + dir.x == p2_pos.x && p1_pos.y + dir.y == p2_pos.y && !p1_trapped && !p2_trapped)
-        {
-          have_met = true;
-          break;
-        }
-      }
     }
 
     if (have_met)
