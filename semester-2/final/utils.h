@@ -67,14 +67,8 @@ enum class GameState
   DONE
 };
 
-std::wostream &operator<<(std::wostream &os, const Point &p);
-std::wostream &operator<<(std::wostream &os, const CharacterState &s);
-std::wostream &operator<<(std::wostream &os, const GameState &s);
-
 char tile_to_char(Tile t);
 
 Tile char_to_tile(char c);
-
-std::wstring make_char_key(const std::wstring &base_text, char symbol);
 
 #endif

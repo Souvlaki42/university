@@ -22,7 +22,6 @@ private:
   unordered_map<Point, int> visited_counts;
   unordered_set<Point> unreachable_points;
 
-  void log_state();
   Point find_next_step(const Point &goal);
   const bool is_walkable(const Tile t) const;
   unordered_map<Point, Tile> look_around_from(Point from);

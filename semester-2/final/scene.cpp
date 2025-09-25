@@ -1,13 +1,13 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
-#include <cursesw.h>
+#include <curses.h>
 #include <sstream>
 
 #include "character.h"
 #include "scene.h"
 
-using std::map, std::vector, std::string, std::ifstream, std::out_of_range, std::exception, std::wstring, std::runtime_error, std::ios, std::max, std::pair, std::wstringstream, std::boolalpha;
+using std::map, std::vector, std::string, std::ifstream, std::out_of_range, std::exception, std::runtime_error, std::ios, std::max, std::pair;
 
 Scene::Scene(const string &map_path)
 {
@@ -35,9 +35,6 @@ void Scene::render()
       mvaddch(y + 1, x + 1, tile_to_char(this->contents[y][x]));
     }
   }
-
-  this->draw_general_stats_panel();
-  this->draw_character_stats_panel();
 }
 
 void Scene::place_characters(Character &char1, Character &char2)
@@ -69,7 +66,6 @@ void Scene::remove_obstacles(const Point &player1_pos, const Point &player2_pos)
       }
     }
   }
-  this->log_event(L"Οι τοίχοι και οι παγίδες εξαφανίστηκαν!");
 }
 
 const Tile Scene::get_tile(int x, int y) const
@@ -93,31 +89,6 @@ void Scene::set_tile(int x, int y, const Tile &newTile)
 
 const Dimensions Scene::get_dimensions() const { return this->dimensions; }
 const Point Scene::get_ladder_position() const { return this->ladder_pos; }
-
-void Scene::log_event(const wstring &event)
-{
-  this->event_logs.insert(this->event_logs.begin(), event);
-  if (this->event_logs.size() > MAX_EVENT_LOGS)
-  {
-    this->event_logs.pop_back();
-  }
-}
-
-template <typename T>
-void Scene::log(const wstring &key, const T &value)
-{
-  wstringstream wss;
-  wss << boolalpha;
-  wss << value;
-  this->debug_status[key] = wss.str();
-}
-
-template void Scene::log<int>(const wstring &, const int &);
-template void Scene::log<bool>(const wstring &, const bool &);
-template void Scene::log<Point>(const wstring &, const Point &);
-template void Scene::log<CharacterState>(const wstring &, const CharacterState &);
-template void Scene::log<wstring>(const wstring &, const wstring &);
-template void Scene::log<GameState>(const wstring &, const GameState &);
 
 void Scene::loadFromText(const string &path)
 {
@@ -224,133 +195,4 @@ void Scene::placeTileAtRandomCorridor(Tile tileToPlace)
   } while (get_tile(random_pos.x, random_pos.y) != Tile::CORRIDOR);
 
   set_tile(random_pos.x, random_pos.y, tileToPlace);
-}
-
-void Scene::draw_general_stats_panel()
-{
-  int screen_height, screen_width;
-  getmaxyx(stdscr, screen_height, screen_width);
-
-  const int panel_start_x = this->dimensions.width + 1;
-  const int panel_width = screen_width - panel_start_x;
-  const int text_padding = 2;
-  const int max_text_width = (panel_width > text_padding * 2) ? (panel_width - text_padding * 2) : 0;
-  int current_y = 2;
-
-  for (int y = 1; y < this->dimensions.height; ++y)
-  {
-    move(y, panel_start_x + 1);
-    clrtoeol();
-  }
-
-  mvvline(1, panel_start_x, ACS_VLINE, this->dimensions.height);
-
-  if (max_text_width <= 0)
-    return;
-
-  mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΓΕΝΙΚΑ ---");
-  current_y++;
-
-  const map<wstring, wstring> &status = this->debug_status;
-  for (map<wstring, wstring>::const_iterator it = status.begin(); it != status.end(); ++it)
-  {
-    if (it->first.find(L'(') == wstring::npos)
-    {
-      if (current_y >= this->dimensions.height - 1)
-        break;
-
-      wstring line = it->first + L": " + it->second;
-      if (line.length() > max_text_width)
-      {
-        line = line.substr(0, max_text_width);
-      }
-      mvaddwstr(current_y++, panel_start_x + text_padding, line.c_str());
-    }
-  }
-
-  current_y++;
-  if (current_y >= screen_height - 1)
-    return;
-  mvaddwstr(current_y++, panel_start_x + text_padding, L"--- ΣΥΜΒΑΝΤΑ ---");
-
-  const vector<wstring> &events = this->event_logs;
-  const int max_event_width = screen_width - text_padding * 2;
-  for (const wstring &event_line : events)
-  {
-    if (current_y >= screen_height - 1)
-      break;
-    wstring line = event_line;
-    if (line.length() > max_event_width)
-      line = line.substr(0, max_event_width);
-    mvaddwstr(current_y++, panel_start_x + text_padding, line.c_str());
-  }
-}
-
-void Scene::draw_character_stats_panel()
-{
-  int screen_height, screen_width;
-  getmaxyx(stdscr, screen_height, screen_width);
-
-  int panel_start_y = this->dimensions.height + 2;
-  const int text_padding = 2;
-  int current_y = panel_start_y;
-
-  for (int y = panel_start_y - 1; y < screen_height; ++y)
-  {
-    move(y, 1);
-    clrtoeol();
-  }
-
-  mvhline(panel_start_y - 1, 1, ACS_HLINE, screen_width - 2);
-
-  if (current_y >= screen_height)
-    return;
-
-  const map<wstring, wstring> &all_status = this->debug_status;
-  vector<wstring> grigorakis_stats;
-  vector<wstring> asimenia_stats;
-
-  for (const pair<const wstring, wstring> &pair : all_status)
-  {
-    const wstring &key = pair.first;
-    const wstring &val = pair.second;
-
-    if (key.find(L"(G)") != wstring::npos)
-    {
-      grigorakis_stats.push_back(key + L": " + val);
-    }
-    else if (key.find(L"(S)") != wstring::npos)
-    {
-      asimenia_stats.push_back(key + L": " + val);
-    }
-  }
-
-  mvaddwstr(current_y++, text_padding, L"--- ΧΑΡΑΚΤΗΡΕΣ ---");
-  current_y++;
-
-  const int col_width = (screen_width / 2) - text_padding;
-  const int x_col1 = text_padding;
-  const int x_col2 = (screen_width / 2) + text_padding / 2;
-  size_t max_rows = max(grigorakis_stats.size(), asimenia_stats.size());
-
-  for (size_t i = 0; i < max_rows; ++i)
-  {
-    if (current_y >= screen_height - 1)
-      break;
-    if (i < grigorakis_stats.size())
-    {
-      wstring line = grigorakis_stats[i];
-      if (line.length() > col_width)
-        line = line.substr(0, col_width);
-      mvaddwstr(current_y, x_col1, line.c_str());
-    }
-    if (i < asimenia_stats.size())
-    {
-      wstring line = asimenia_stats[i];
-      if (line.length() > col_width)
-        line = line.substr(0, col_width);
-      mvaddwstr(current_y, x_col2, line.c_str());
-    }
-    current_y++;
-  }
 }

@@ -1,4 +1,4 @@
-#include <cursesw.h>
+#include <curses.h>
 #include "character.h"
 #include "scene.h"
 #include <queue>
@@ -16,7 +16,6 @@ Character::Character(Scene &scene, char symbol, bool has_key, Point position) : 
   this->key_position = {-1, -1};
   this->cage_position = {-1, -1};
   this->unreachable_points = {};
-  this->log_state();
 }
 
 unordered_map<Point, Tile> Character::look_around_from(Point from)
@@ -30,17 +29,6 @@ unordered_map<Point, Tile> Character::look_around_from(Point from)
   }
 
   return around;
-}
-
-void Character::log_state()
-{
-  this->scene.log(make_char_key(L"Θέση", this->symbol), this->position);
-  this->scene.log(make_char_key(L"Κατεύθηνση", this->symbol), this->direction);
-  this->scene.log(make_char_key(L"Είναι παγιδευμένος", this->symbol), this->trapped);
-  this->scene.log(make_char_key(L"Έχει κλειδί", this->symbol), this->has_key);
-  this->scene.log(make_char_key(L"Κατάσταση", this->symbol), this->state);
-  this->scene.log(make_char_key(L"Θέση κλειδιού", this->symbol), this->key_position);
-  this->scene.log(make_char_key(L"Θέση κλουβιού", this->symbol), this->cage_position);
 }
 
 void Character::render()
@@ -107,7 +95,6 @@ void Character::update(Character &partner)
   if (this->trapped)
   {
     this->state = CharacterState::IDLE;
-    log_state();
     return;
   }
 
@@ -159,8 +146,6 @@ void Character::update(Character &partner)
   case CharacterState::IDLE:
     break;
   }
-
-  log_state();
 }
 
 void Character::move(const Point &target_pos)
@@ -178,11 +163,9 @@ void Character::move(const Point &target_pos)
         {
           next_pos = this->key_position;
           move_decided = true;
-          scene.log_event(L"Αποφάσισα να πάρω το κλειδί τώρα!");
         }
         else
         {
-          scene.log_event(L"Αποφάσισα να αφήσω το κλειδί για αργότερα.");
           vector<Point> avoidance_options;
           unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
           for (const pair<Point, Tile> &pair : surroundings)
@@ -278,7 +261,6 @@ void Character::move(const Point &target_pos)
     next_pos = find_next_step(target_pos);
     if (next_pos == Point{-1, -1})
     {
-      this->scene.log_event(L"Δεν βρέθηκε μονοπάτι, η εξερεύνηση συνεχίζεται.");
       this->unreachable_points.insert(target_pos);
       this->state = CharacterState::EXPLORING;
     }

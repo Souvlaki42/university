@@ -1,4 +1,4 @@
-#include <cursesw.h>
+#include <curses.h>
 #include <unistd.h>
 #include <iostream>
 #include <string>
@@ -45,11 +45,6 @@ int main(int argc, char *argv[])
     leaveok(stdscr, true);
     scrollok(stdscr, false);
 
-    scene.log_event(L"Πάτα 'q' για να τερματήσεις την προσομοίωση.");
-
-    scene.log(L"Τέρμινα", moves_left);
-    scene.log(L"Κατάσταση", gameState);
-
     scene.render();
     if (grigorakis.get_position() == asimenia.get_position())
     {
@@ -84,8 +79,6 @@ int main(int argc, char *argv[])
         }
 
         moves_left--;
-        scene.log(L"Τέρμινα", moves_left);
-        scene.log(L"Κατάσταση", gameState);
 
         check_game_over_conditions(grigorakis, asimenia, scene, gameState, moves_left);
       }
@@ -138,21 +131,18 @@ void process_character_move(Character &character, Character &partner, Scene &sce
   {
     if (character.get_has_key())
     {
-      scene.log_event(L"ΑΠΟΤΥΧΙΑ: Ο χαρακτήρας έπεσε σε παγίδα ενώ είχε το κλειδί!");
       gameState = GameState::LOSING;
     }
     else
     {
       character.set_trapped(true);
       scene.set_tile(pos.x, pos.y, Tile::CAGE);
-      scene.log_event(L"Ένας χαρακτήρας παγιδεύτηκε!");
     }
   }
   else if (tile_at_pos == Tile::KEY)
   {
     character.set_has_key(true);
     scene.set_tile(pos.x, pos.y, Tile::CORRIDOR);
-    scene.log_event(L"Το κλειδί βρέθηκε!");
     if (character.get_state() == CharacterState::FETCHING_KEY)
     {
       character.set_state(CharacterState::GOING_TO_CAGE);
@@ -209,17 +199,14 @@ void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, Game
   if (p1.is_trapped() && p2.is_trapped())
   {
     gameState = GameState::LOSING;
-    scene.log_event(L"ΑΠΟΤΥΧΙΑ: Και οι δύο χαρακτήρες παγιδεύτηκαν!");
   }
   else if ((p1.is_trapped() && p1.get_has_key()) || (p2.is_trapped() && p2.get_has_key()))
   {
     gameState = GameState::LOSING;
-    scene.log_event(L"ΑΠΟΤΥΧΙΑ: Ο χαρακτήρας με το κλειδί παγιδεύτηκε!");
   }
   else if (moves_left <= 0)
   {
     gameState = GameState::LOSING;
-    scene.log_event(L"ΑΠΟΤΥΧΙΑ: Ο χρόνος τελείωσε!");
   }
 
   if (gameState == GameState::WINNING)
@@ -228,14 +215,12 @@ void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, Game
     if (p1.get_position() == ladder_pos && p2.get_position() == ladder_pos)
     {
       gameState = GameState::DONE;
-      scene.log_event(L"ΝΙΚΗ: Το βασίλειο σώθηκε!");
     }
   }
 }
 
 void trigger_meetup_sequence(Character &p1, Character &p2, Scene &scene, GameState &gameState)
 {
-  scene.log_event(L"ΝΙΚΗ: Οι χαρακτήρες συναντήθηκαν! Τώρα προς τη σκάλα!");
   gameState = GameState::WINNING;
 
   if (p1.is_trapped())

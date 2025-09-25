@@ -31,61 +31,6 @@ Point Point::operator+(const Point &other) const
   return {this->x + other.x, this->y + other.y};
 }
 
-std::wostream &operator<<(std::wostream &os, const Point &p)
-{
-  os << L"(" << p.x << L", " << p.y << L")";
-  return os;
-}
-
-std::wostream &operator<<(std::wostream &os, const CharacterState &s)
-{
-  switch (s)
-  {
-  case CharacterState::EXPLORING:
-    os << L"Εξερευνώ";
-    break;
-  case CharacterState::FETCHING_KEY:
-    os << L"Πάω να πάρω το κλειδί";
-    break;
-  case CharacterState::GOING_TO_CAGE:
-    os << L"Πάω να ξεκλειδώσω το κλουβί";
-    break;
-  case CharacterState::GOING_TO_LADDER:
-    os << L"Πάω στην σκάλα";
-    break;
-  case CharacterState::IDLE:
-    os << L"Δεν κάνω τίποτα";
-    break;
-  default:
-    os << L"Λάθος κατάσταση";
-    break;
-  }
-  return os;
-}
-
-std::wostream &operator<<(std::wostream &os, const GameState &s)
-{
-  switch (s)
-  {
-  case GameState::RUNNING:
-    os << L"Εκτελείται";
-    break;
-  case GameState::WINNING:
-    os << L"Νικήσαμε";
-    break;
-  case GameState::LOSING:
-    os << L"Χάσαμε";
-    break;
-  case GameState::DONE:
-    os << L"Τελείωσαμε";
-    break;
-  default:
-    os << L"Λάθος κατάσταση";
-    break;
-  }
-  return os;
-}
-
 char tile_to_char(Tile t)
 {
   switch (t)
@@ -126,11 +71,4 @@ Tile char_to_tile(char c)
   default:
     return Tile::NONE;
   }
-}
-
-std::wstring make_char_key(const std::wstring &base_text, char symbol)
-{
-  std::wstringstream ss;
-  ss << base_text << L" (" << symbol << L')';
-  return ss.str();
 }
