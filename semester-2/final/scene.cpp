@@ -180,17 +180,11 @@ void Scene::loadFromBinary(const string &path)
 
 void Scene::placeTileAtRandomCorridor(Tile tileToPlace)
 {
-  int safety_counter = 0;
   Point random_pos;
   do
   {
     random_pos.x = random() % this->dimensions.width;
     random_pos.y = random() % this->dimensions.height;
-    safety_counter++;
-    if (safety_counter > MAX_RAND_PLACEMENTS)
-    {
-      throw runtime_error("Δεν βρέθηκαν διάδρομοι για την τοποθέτηση των αντικειμένων.");
-    }
   } while (get_tile(random_pos.x, random_pos.y) != Tile::CORRIDOR);
 
   set_tile(random_pos.x, random_pos.y, tileToPlace);

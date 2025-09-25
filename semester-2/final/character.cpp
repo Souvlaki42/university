@@ -52,16 +52,10 @@ void Character::set_position(const Point &new_pos)
 
   Dimensions dimensions = this->scene.get_dimensions();
   Point tmp_pos = {0, 0};
-  int safety_counter = 0;
   do
   {
     tmp_pos.x = random() % dimensions.width;
     tmp_pos.y = random() % dimensions.height;
-    safety_counter++;
-    if (safety_counter > MAX_RAND_PLACEMENTS)
-    {
-      throw runtime_error("Δεν βρέθηκαν διάδρομοι για την τοποθέτηση των χαρακτήρων.");
-    }
   } while (this->scene.get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR);
 
   this->position = tmp_pos;
