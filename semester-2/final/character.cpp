@@ -1,183 +1,193 @@
 #include <curses.h>
 #include "character.h"
 #include "scene.h"
-#include <queue>
+#include <vector>
+#include <string>
+#include <cstdio>
 
-using std::vector, std::queue, std::runtime_error, std::pair;
+using std::pair;
+using std::vector;
 
-Character::Character(Scene &scene, char symbol, bool has_key, Point position) : scene(scene)
+Character::Character(Scene &scene, char symbol, int has_key, Point position) : scene(scene)
 {
   this->position = position;
   this->direction = {1, 0};
   this->symbol = symbol;
-  this->trapped = false;
+  this->trapped = 0;
   this->has_key = has_key;
-  this->state = CharacterState::EXPLORING;
+  this->state = STATE_EXPLORING;
   this->key_position = {-1, -1};
   this->cage_position = {-1, -1};
-  this->unreachable_points = {};
 }
 
-unordered_map<Point, Tile> Character::look_around_from(Point from)
+vector<pair<Point, int>> Character::look_around_from(Point from)
 {
   vector<Point> directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
-  unordered_map<Point, Tile> around;
-
-  for (const Point &dir : directions)
+  vector<pair<Point, int>> around;
+  for (size_t i = 0; i < directions.size(); ++i)
   {
-    around.insert({dir, this->scene.get_tile(from.x + dir.x, from.y + dir.y)});
+    Point dir = directions[i];
+    around.push_back(pair<Point, int>(dir, this->scene.get_tile(from.x + dir.x, from.y + dir.y)));
   }
-
   return around;
 }
 
 void Character::render()
 {
-  mvaddch(this->position.y + 1, this->position.x + 1, this->trapped ? tile_to_char(Tile::CAGE) : this->symbol);
+  mvaddch(this->position.y + 1, this->position.x + 1, this->trapped ? tile_to_char(TILE_CAGE) : this->symbol);
 }
 
-const Point Character::get_position() const
+Point Character::get_position()
 {
   return this->position;
 }
 
-void Character::set_position(const Point &new_pos)
+void Character::set_position(Point new_pos)
 {
-  if (new_pos != Point{-1, -1})
+  if (!(new_pos.x == -1 && new_pos.y == -1))
   {
     this->position = new_pos;
-    this->visited_counts[new_pos]++;
+    this->visited_counts[key_for_point(new_pos)]++;
     return;
   }
 
-  Dimensions dimensions = this->scene.get_dimensions();
+  Point dimensions = this->scene.get_dimensions();
   Point tmp_pos = {0, 0};
   do
   {
-    tmp_pos.x = random() % dimensions.width;
-    tmp_pos.y = random() % dimensions.height;
-  } while (this->scene.get_tile(tmp_pos.x, tmp_pos.y) != Tile::CORRIDOR);
+    tmp_pos.x = random() % dimensions.x;
+    tmp_pos.y = random() % dimensions.y;
+  } while (this->scene.get_tile(tmp_pos.x, tmp_pos.y) != TILE_CORRIDOR);
 
   this->position = tmp_pos;
-  this->visited_counts[tmp_pos] = 1;
+  this->visited_counts[key_for_point(tmp_pos)] = 1;
 }
 
-bool Character::is_trapped() const
+bool Character::is_trapped()
 {
   return this->trapped;
 }
 
-bool Character::is_walkable(const Tile t) const
+bool Character::is_walkable(int t)
 {
-  return t == Tile::CORRIDOR || t == Tile::KEY || t == Tile::LADDER || t == Tile::TRAP || (this->has_key && t == Tile::CAGE);
+  return t == TILE_CORRIDOR || t == TILE_KEY || t == TILE_LADDER || t == TILE_TRAP || (this->has_key && t == TILE_CAGE);
 }
 
-void Character::set_trapped(const bool trapped)
+void Character::set_trapped(int trapped)
 {
   this->trapped = trapped;
   if (trapped)
-    this->state = CharacterState::IDLE;
+    this->state = STATE_IDLE;
 }
 
-bool Character::get_has_key() const { return this->has_key; }
-void Character::set_has_key(bool status) { this->has_key = status; }
-CharacterState Character::get_state() const { return this->state; }
-void Character::set_state(CharacterState new_state) { this->state = new_state; }
+int Character::get_has_key() { return this->has_key; }
+void Character::set_has_key(int status) { this->has_key = status; }
+int Character::get_state() { return this->state; }
+void Character::set_state(int new_state) { this->state = new_state; }
 
 void Character::update(Character &partner)
 {
   if (this->trapped)
   {
-    this->state = CharacterState::IDLE;
+    this->state = STATE_IDLE;
     return;
   }
 
-  unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-  for (const pair<const Point, Tile> &pair : surroundings)
+  vector<pair<Point, int>> surroundings = this->look_around_from(this->position);
+  for (size_t i = 0; i < surroundings.size(); ++i)
   {
-    Point tile_abs_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
-    Tile tile = pair.second;
+    Point rel = surroundings[i].first;
+    int tile = surroundings[i].second;
+    Point tile_abs_pos = {this->position.x + rel.x, this->position.y + rel.y};
 
-    if (tile == Tile::KEY && this->key_position == Point{-1, -1})
+    if (tile == TILE_KEY && this->key_position.x == -1 && this->key_position.y == -1)
     {
       this->key_position = tile_abs_pos;
     }
-    else if (tile == Tile::CAGE && this->cage_position == Point{-1, -1})
+    else if (tile == TILE_CAGE && this->cage_position.x == -1 && this->cage_position.y == -1)
     {
       this->cage_position = tile_abs_pos;
     }
   }
 
-  if (this->state == CharacterState::EXPLORING)
+  if (this->state == STATE_EXPLORING)
   {
-    if (this->cage_position != Point{-1, -1})
+    if (!(this->cage_position.x == -1 && this->cage_position.y == -1))
     {
-      if (this->has_key && this->unreachable_points.find(this->cage_position) == this->unreachable_points.end())
+      if (this->has_key && this->unreachable_points[key_for_point(this->cage_position)] == 0)
       {
-        this->state = CharacterState::GOING_TO_CAGE;
+        this->state = STATE_GOING_TO_CAGE;
       }
-      else if (this->key_position != Point{-1, -1} && this->unreachable_points.find(this->key_position) == this->unreachable_points.end())
+      else if (!(this->key_position.x == -1 && this->key_position.y == -1) && this->unreachable_points[key_for_point(this->key_position)] == 0)
       {
-        this->state = CharacterState::FETCHING_KEY;
+        this->state = STATE_FETCHING_KEY;
       }
     }
   }
 
-  switch (this->state)
+  if (this->state == STATE_EXPLORING)
   {
-  case CharacterState::EXPLORING:
-    this->move({-1, -1});
-    break;
-  case CharacterState::FETCHING_KEY:
+    this->move();
+  }
+  else if (this->state == STATE_FETCHING_KEY)
+  {
     this->move(this->key_position);
-    break;
-  case CharacterState::GOING_TO_CAGE:
+  }
+  else if (this->state == STATE_GOING_TO_CAGE)
+  {
     this->move(this->cage_position);
-    break;
-  case CharacterState::GOING_TO_LADDER:
+  }
+  else if (this->state == STATE_GOING_TO_LADDER)
+  {
     this->move(this->scene.get_ladder_position());
-    break;
-  case CharacterState::IDLE:
-    break;
   }
 }
 
-void Character::move(const Point &target_pos)
+void Character::move()
+{
+  Point p;
+  p.x = -1;
+  p.y = -1;
+  this->move(p);
+}
+
+void Character::move(Point target_pos)
 {
   Point next_pos = {-1, -1};
-  bool move_decided = false;
+  int move_decided = 0;
 
-  if (target_pos == Point{-1, -1})
+  if (target_pos.x == -1 && target_pos.y == -1)
   {
     if (!move_decided)
     {
       Point straight_ahead_pos = {this->position.x + this->direction.x, this->position.y + this->direction.y};
-      Tile tile_ahead = this->scene.get_tile(straight_ahead_pos.x, straight_ahead_pos.y);
+      int tile_ahead = this->scene.get_tile(straight_ahead_pos.x, straight_ahead_pos.y);
       if (is_walkable(tile_ahead))
       {
         next_pos = straight_ahead_pos;
-        move_decided = true;
+        move_decided = 1;
       }
     }
 
     if (!move_decided)
     {
       vector<Point> candidate_options;
-      unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-      for (const pair<const Point, Tile> &pair : surroundings)
+      vector<pair<Point, int>> surroundings = this->look_around_from(this->position);
+      for (size_t i = 0; i < surroundings.size(); ++i)
       {
-        if (is_walkable(pair.second))
+        if (is_walkable(surroundings[i].second))
         {
-          candidate_options.push_back({this->position.x + pair.first.x, this->position.y + pair.first.y});
+          Point rel = surroundings[i].first;
+          candidate_options.push_back({this->position.x + rel.x, this->position.y + rel.y});
         }
       }
 
       if (!candidate_options.empty())
       {
         int min_visits = -1;
-        for (const Point &pos : candidate_options)
+        for (Point &pos : candidate_options)
         {
-          int current_visits = this->visited_counts[pos];
+          int current_visits = this->visited_counts[key_for_point(pos)];
           if (min_visits == -1 || current_visits < min_visits)
           {
             min_visits = current_visits;
@@ -185,74 +195,42 @@ void Character::move(const Point &target_pos)
         }
 
         vector<Point> least_visited_options;
-        for (const Point &pos : candidate_options)
+        for (Point &pos : candidate_options)
         {
-          if (this->visited_counts[pos] == min_visits)
+          if (this->visited_counts[key_for_point(pos)] == min_visits)
           {
             least_visited_options.push_back(pos);
           }
         }
         next_pos = least_visited_options[random() % least_visited_options.size()];
-        move_decided = true;
+        move_decided = 1;
       }
     }
   }
   else
   {
-    next_pos = find_next_step(target_pos);
-    if (next_pos == Point{-1, -1})
+    if (abs(target_pos.x - this->position.x) + abs(target_pos.y - this->position.y) == 1 && is_walkable(this->scene.get_tile(target_pos.x, target_pos.y)))
     {
-      this->unreachable_points.insert(target_pos);
-      this->state = CharacterState::EXPLORING;
+      next_pos = target_pos;
+      move_decided = 1;
+    }
+    if (!move_decided)
+    {
+      this->state = STATE_EXPLORING;
+      return this->move();
     }
   }
 
-  if (next_pos != Point{-1, -1} && next_pos != this->position)
+  if (!(next_pos.x == -1 && next_pos.y == -1) && !(next_pos.x == this->position.x && next_pos.y == this->position.y))
   {
     this->direction = {next_pos.x - this->position.x, next_pos.y - this->position.y};
     this->set_position(next_pos);
   }
 }
 
-Point Character::find_next_step(const Point &goal)
+std::string Character::key_for_point(Point p)
 {
-  if (this->position == goal)
-    return this->position;
-
-  queue<Point> q;
-  q.push(this->position);
-
-  unordered_map<Point, Point> came_from;
-  came_from[this->position] = {-1, -1};
-
-  while (!q.empty())
-  {
-    Point current = q.front();
-    q.pop();
-
-    if (current == goal)
-    {
-      Point step = goal;
-      while (came_from.count(step) && came_from[step] != this->position)
-      {
-        step = came_from[step];
-        if (step == Point{-1, -1})
-          return {-1, -1};
-      }
-      return step;
-    }
-
-    unordered_map<Point, Tile> surroundings = this->look_around_from(current);
-    for (const pair<const Point, Tile> &pair : surroundings)
-    {
-      Point next = {current.x + pair.first.x, current.y + pair.first.y};
-      if (is_walkable(pair.second) && came_from.find(next) == came_from.end())
-      {
-        q.push(next);
-        came_from[next] = current;
-      }
-    }
-  }
-
-  return {-1, -1};
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%d,%d", p.x, p.y);
+  return std::string(buf);
 }

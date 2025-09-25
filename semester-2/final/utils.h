@@ -1,71 +1,37 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <ostream>
+#include <stddef.h>
 
-#define MAX_MOVES 1'000          // Πόσα τέρμινα είναι αποδέκτο να περάσουν πριν η προσομοίωση τελειώσει
-#define FRAME_DELAY_MS 1'000'000 // Ο χρόνος μεταξύ δύο τέρμινων σε μικροδευτερόλεπτα (1 δευτερόλεπτο)
+#define MAX_MOVES 1000         // Πόσα τέρμινα είναι αποδέκτο να περάσουν πριν η προσομοίωση τελειώσει
+#define FRAME_DELAY_MS 1000000 // Ο χρόνος μεταξύ δύο τέρμινων σε μικροδευτερόλεπτα (1 δευτερόλεπτο)
 
 struct Point
 {
-  int x, y;
-
-  bool operator==(const Point &other) const;
-  bool operator!=(const Point &other) const;
-  bool operator<(const Point &other) const;
-  Point &operator+=(const Point &other);
-  Point operator+(const Point &other) const;
+  int x;
+  int y;
 };
 
-namespace std
-{
-  template <>
-  struct hash<Point>
-  {
-    size_t operator()(const Point &p) const
-    {
-      size_t h1 = std::hash<int>{}(p.x);
-      size_t h2 = std::hash<int>{}(p.y);
-      return h1 ^ (h2 << 1);
-    }
-  };
-}
+#define TILE_NONE 0
+#define TILE_WALL 1
+#define TILE_CORRIDOR 2
+#define TILE_LADDER 3
+#define TILE_KEY 4
+#define TILE_TRAP 5
+#define TILE_CAGE 6
 
-struct Dimensions
-{
-  size_t width, height;
-};
+#define STATE_EXPLORING 0
+#define STATE_FETCHING_KEY 1
+#define STATE_GOING_TO_CAGE 2
+#define STATE_GOING_TO_LADDER 3
+#define STATE_IDLE 4
 
-enum class Tile
-{
-  NONE,
-  WALL,
-  CORRIDOR,
-  LADDER,
-  KEY,
-  TRAP,
-  CAGE,
-};
+#define GAME_RUNNING 0
+#define GAME_WINNING 1
+#define GAME_LOSING 2
+#define GAME_DONE 3
 
-enum class CharacterState
-{
-  EXPLORING,
-  FETCHING_KEY,
-  GOING_TO_CAGE,
-  GOING_TO_LADDER,
-  IDLE
-};
-
-enum class GameState
-{
-  RUNNING,
-  WINNING,
-  LOSING,
-  DONE
-};
-
-char tile_to_char(Tile t);
-
-Tile char_to_tile(char c);
+char tile_to_char(int t);
+int char_to_tile(char c);
 
 #endif

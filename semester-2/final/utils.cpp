@@ -1,73 +1,35 @@
 #include "utils.h"
-#include <ostream>
 
-bool Point::operator==(const Point &other) const
+char tile_to_char(int t)
 {
-  return x == other.x && y == other.y;
-}
-
-bool Point::operator!=(const Point &other) const
-{
-  return !(*this == other);
-}
-
-bool Point::operator<(const Point &other) const
-{
-  if (y == other.y)
-    return x < other.x;
-  return y < other.y;
-}
-
-Point &Point::operator+=(const Point &other)
-{
-  this->x += other.x;
-  this->y += other.y;
-  return *this;
-}
-
-Point Point::operator+(const Point &other) const
-{
-  return {this->x + other.x, this->y + other.y};
-}
-
-char tile_to_char(Tile t)
-{
-  switch (t)
-  {
-  case Tile::WALL:
+  if (t == TILE_WALL)
     return '*';
-  case Tile::CORRIDOR:
+  if (t == TILE_CORRIDOR)
     return ' ';
-  case Tile::LADDER:
+  if (t == TILE_LADDER)
     return 'L';
-  case Tile::KEY:
+  if (t == TILE_KEY)
     return 'K';
-  case Tile::TRAP:
+  if (t == TILE_TRAP)
     return 'T';
-  case Tile::CAGE:
+  if (t == TILE_CAGE)
     return 'C';
-  default:
-    return '0';
-  }
+  return '0';
 }
 
-Tile char_to_tile(char c)
+int char_to_tile(char c)
 {
-  switch (c)
-  {
-  case '*':
-    return Tile::WALL;
-  case ' ':
-    return Tile::CORRIDOR;
-  case 'L':
-    return Tile::LADDER;
-  case 'K':
-    return Tile::KEY;
-  case 'T':
-    return Tile::TRAP;
-  case 'C':
-    return Tile::CAGE;
-  default:
-    return Tile::NONE;
-  }
+  if (c == '*')
+    return TILE_WALL;
+  if (c == ' ')
+    return TILE_CORRIDOR;
+  if (c == 'L')
+    return TILE_LADDER;
+  if (c == 'K')
+    return TILE_KEY;
+  if (c == 'T')
+    return TILE_TRAP;
+  if (c == 'C')
+    return TILE_CAGE;
+  return TILE_NONE;
 }

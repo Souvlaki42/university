@@ -1,155 +1,145 @@
 #include <curses.h>
 #include <unistd.h>
-#include <iostream>
 #include <string>
 #include "scene.h"
 #include "character.h"
 #include "utils.h"
+#include <time.h>
 
-using std::cerr, std::exception, std::string, std::vector;
+using std::string;
 
-void process_character_move(Character &character, Character &partner, Scene &scene, GameState &gameState);
-void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, GameState &gameState, int &moves_left);
-void trigger_meetup_sequence(Character &p1, Character &p2, Scene &scene, GameState &gameState);
+void process_character_move(Character &character, Character &partner, Scene &scene, int &gameState);
+void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, int &gameState, int &moves_left);
+void trigger_meetup_sequence(Character &p1, Character &p2, Scene &scene, int &gameState);
 
-//! Οδηγίες: https://docs.google.com/document/d/12qdicYiuhyEsiSzJqg7Vp2uN0f_mEO32C6b3-flJtj0/edit?tab=t.0
 int main(int argc, char *argv[])
 {
   srandom(time(NULL));
 
   if (argc < 2)
   {
-    cerr << "Σφάλμα: Δεν δόθηκε αρχείο χάρτη.\n";
     return 1;
   }
 
-  try
+  std::string mapPath = argv[1];
+  Scene scene = Scene(mapPath);
+  Character grigorakis = Character(scene, 'G', 0);
+  Character asimenia = Character(scene, 'S', 0);
+
+  scene.place_characters(grigorakis, asimenia);
+
+  int gameState = GAME_RUNNING;
+  int moves_left = MAX_MOVES;
+
+  initscr();
+  cbreak();
+  noecho();
+  keypad(stdscr, true);
+  timeout(0);
+
+  scene.render();
+  grigorakis.render();
+  asimenia.render();
+  refresh();
+
+  usleep(FRAME_DELAY_MS);
+
+  while (gameState != GAME_DONE)
   {
-    Scene scene = Scene(string(argv[1]));
-    Character grigorakis = Character(scene, 'G', false);
-    Character asimenia = Character(scene, 'S', false);
+    if (getch() == 27)
+    {
+      break;
+    }
 
-    scene.place_characters(grigorakis, asimenia);
+    if (gameState == GAME_RUNNING || gameState == GAME_WINNING)
+    {
+      grigorakis.update(asimenia);
+      process_character_move(grigorakis, asimenia, scene, gameState);
 
-    GameState gameState = GameState::RUNNING;
-    int moves_left = MAX_MOVES;
+      if (gameState == GAME_RUNNING || gameState == GAME_WINNING)
+      {
+        asimenia.update(grigorakis);
+        process_character_move(asimenia, grigorakis, scene, gameState);
+      }
 
-    initscr();
-    cbreak();             // Essential: disables line buffering, so input is available immediately.
-    noecho();             // Essential: prevents keypresses from being echoed to the screen.
-    keypad(stdscr, true); // Essential: enables reading function keys (arrows, etc.).
-    timeout(0);
+      moves_left--;
 
+      check_game_over_conditions(grigorakis, asimenia, scene, gameState, moves_left);
+    }
+
+    erase();
     scene.render();
     grigorakis.render();
     asimenia.render();
     refresh();
 
-    usleep(FRAME_DELAY_MS);
-
-    while (gameState != GameState::DONE)
+    if (gameState == GAME_LOSING || (gameState == GAME_DONE && moves_left >= 0))
     {
-      if (getch() == 27)
-      {
-        break;
-      }
-
-      if (gameState == GameState::RUNNING || gameState == GameState::WINNING)
-      {
-        grigorakis.update(asimenia);
-        process_character_move(grigorakis, asimenia, scene, gameState);
-
-        if (gameState == GameState::RUNNING || gameState == GameState::WINNING)
-        {
-          asimenia.update(grigorakis);
-          process_character_move(asimenia, grigorakis, scene, gameState);
-        }
-
-        moves_left--;
-
-        check_game_over_conditions(grigorakis, asimenia, scene, gameState, moves_left);
-      }
-
-      erase();
-      scene.render();
-      grigorakis.render();
-      asimenia.render();
-      refresh();
-
-      if (gameState == GameState::LOSING || (gameState == GameState::DONE && moves_left >= 0))
-      {
-        timeout(-1);
-        getch();
-        break;
-      }
-
-      usleep(FRAME_DELAY_MS);
+      timeout(-1);
+      getch();
+      break;
     }
 
-    endwin();
+    usleep(FRAME_DELAY_MS);
   }
-  catch (const exception &e)
-  {
-    endwin();
-    cerr << "Ένα ανεπανόρθωτο σφάλμα προέκυψε: " << e.what() << "\n";
-    return 1;
-  }
+
+  endwin();
 
   return 0;
 }
 
-void process_character_move(Character &character, Character &partner, Scene &scene, GameState &gameState)
+void process_character_move(Character &character, Character &partner, Scene &scene, int &gameState)
 {
-  if (gameState == GameState::LOSING || gameState == GameState::DONE)
+  if (gameState == GAME_LOSING || gameState == GAME_DONE)
     return;
 
   Point pos = character.get_position();
-  Tile tile_at_pos = scene.get_tile(pos.x, pos.y);
+  int tile_at_pos = scene.get_tile(pos.x, pos.y);
 
-  if (tile_at_pos == Tile::TRAP)
+  if (tile_at_pos == TILE_TRAP)
   {
     if (character.get_has_key())
     {
-      gameState = GameState::LOSING;
+      gameState = GAME_LOSING;
     }
     else
     {
-      character.set_trapped(true);
-      scene.set_tile(pos.x, pos.y, Tile::CAGE);
+      character.set_trapped(1);
+      scene.set_tile(pos.x, pos.y, TILE_CAGE);
     }
   }
-  else if (tile_at_pos == Tile::KEY)
+  else if (tile_at_pos == TILE_KEY)
   {
-    character.set_has_key(true);
-    scene.set_tile(pos.x, pos.y, Tile::CORRIDOR);
-    if (character.get_state() == CharacterState::FETCHING_KEY)
+    character.set_has_key(1);
+    scene.set_tile(pos.x, pos.y, TILE_CORRIDOR);
+    if (character.get_state() == STATE_FETCHING_KEY)
     {
-      character.set_state(CharacterState::GOING_TO_CAGE);
+      character.set_state(STATE_GOING_TO_CAGE);
     }
   }
-  else if (tile_at_pos == Tile::CAGE)
+  else if (tile_at_pos == TILE_CAGE)
   {
     if (character.get_has_key() && partner.is_trapped())
     {
       trigger_meetup_sequence(character, partner, scene, gameState);
-      scene.set_tile(pos.x, pos.y, Tile::CORRIDOR);
+      scene.set_tile(pos.x, pos.y, TILE_CORRIDOR);
     }
   }
 }
 
-void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, GameState &gameState, int &moves_left)
+void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, int &gameState, int &moves_left)
 {
-  if (gameState == GameState::RUNNING)
+  if (gameState == GAME_RUNNING)
   {
-    bool have_met = false;
+    int have_met = 0;
     Point p1_pos = p1.get_position();
     Point p2_pos = p2.get_position();
     bool p1_trapped = p1.is_trapped();
     bool p2_trapped = p2.is_trapped();
 
-    if (p1_pos == p2_pos && !p1_trapped && !p2_trapped)
+    if (p1_pos.x == p2_pos.x && p1_pos.y == p2_pos.y && !p1_trapped && !p2_trapped)
     {
-      have_met = true;
+      have_met = 1;
     }
 
     if (have_met)
@@ -159,43 +149,43 @@ void check_game_over_conditions(Character &p1, Character &p2, Scene &scene, Game
     }
   }
 
-  if (gameState == GameState::LOSING || gameState == GameState::DONE)
+  if (gameState == GAME_LOSING || gameState == GAME_DONE)
     return;
 
   if (p1.is_trapped() && p2.is_trapped())
   {
-    gameState = GameState::LOSING;
+    gameState = GAME_LOSING;
   }
   else if ((p1.is_trapped() && p1.get_has_key()) || (p2.is_trapped() && p2.get_has_key()))
   {
-    gameState = GameState::LOSING;
+    gameState = GAME_LOSING;
   }
   else if (moves_left <= 0)
   {
-    gameState = GameState::LOSING;
+    gameState = GAME_LOSING;
   }
 
-  if (gameState == GameState::WINNING)
+  if (gameState == GAME_WINNING)
   {
     Point ladder_pos = scene.get_ladder_position();
-    if (p1.get_position() == ladder_pos && p2.get_position() == ladder_pos)
+    if (p1.get_position().x == ladder_pos.x && p1.get_position().y == ladder_pos.y && p2.get_position().x == ladder_pos.x && p2.get_position().y == ladder_pos.y)
     {
-      gameState = GameState::DONE;
+      gameState = GAME_DONE;
     }
   }
 }
 
-void trigger_meetup_sequence(Character &p1, Character &p2, Scene &scene, GameState &gameState)
+void trigger_meetup_sequence(Character &p1, Character &p2, Scene &scene, int &gameState)
 {
-  gameState = GameState::WINNING;
+  gameState = GAME_WINNING;
 
   if (p1.is_trapped())
-    p1.set_trapped(false);
+    p1.set_trapped(0);
   if (p2.is_trapped())
-    p2.set_trapped(false);
+    p2.set_trapped(0);
 
   scene.remove_obstacles(p1.get_position(), p2.get_position());
 
-  p1.set_state(CharacterState::GOING_TO_LADDER);
-  p2.set_state(CharacterState::GOING_TO_LADDER);
+  p1.set_state(STATE_GOING_TO_LADDER);
+  p2.set_state(STATE_GOING_TO_LADDER);
 }
