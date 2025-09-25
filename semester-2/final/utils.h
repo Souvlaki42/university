@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <ostream>
-#include <sstream>
 
 #define MAX_MOVES 1'000          // Πόσα τέρμινα είναι αποδέκτο να περάσουν πριν η προσομοίωση τελειώσει
 #define FRAME_DELAY_MS 1'000'000 // Ο χρόνος μεταξύ δύο τέρμινων σε μικροδευτερόλεπτα (1 δευτερόλεπτο)

@@ -1,6 +1,5 @@
 #include "utils.h"
 #include <ostream>
-#include <sstream>
 
 bool Point::operator==(const Point &other) const
 {

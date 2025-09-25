@@ -2,7 +2,6 @@
 #include <vector>
 #include <fstream>
 #include <curses.h>
-#include <sstream>
 
 #include "character.h"
 #include "scene.h"
@@ -67,7 +66,7 @@ void Scene::remove_obstacles(const Point &player1_pos, const Point &player2_pos)
   }
 }
 
-const Tile Scene::get_tile(int x, int y) const
+Tile Scene::get_tile(int x, int y) const
 {
   if (y < 0 || y >= this->contents.size() ||
       x < 0 || x >= this->contents[y].size())

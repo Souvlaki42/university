@@ -18,7 +18,7 @@ public:
   void place_characters(Character &char1, Character &char2);
   void remove_obstacles(const Point &player1_pos, const Point &player2_pos);
 
-  const Tile get_tile(int x, int y) const;
+  Tile get_tile(int x, int y) const;
   void set_tile(int x, int y, const Tile &newTile);
   const Dimensions get_dimensions() const;
   const Point get_ladder_position() const;

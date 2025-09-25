@@ -62,12 +62,12 @@ void Character::set_position(const Point &new_pos)
   this->visited_counts[tmp_pos] = 1;
 }
 
-const bool Character::is_trapped() const
+bool Character::is_trapped() const
 {
   return this->trapped;
 }
 
-const bool Character::is_walkable(const Tile t) const
+bool Character::is_walkable(const Tile t) const
 {
   return t == Tile::CORRIDOR || t == Tile::KEY || t == Tile::LADDER || t == Tile::TRAP || (this->has_key && t == Tile::CAGE);
 }
@@ -93,7 +93,7 @@ void Character::update(Character &partner)
   }
 
   unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-  for (const pair<Point, Tile> &pair : surroundings)
+  for (const pair<const Point, Tile> &pair : surroundings)
   {
     Point tile_abs_pos = {this->position.x + pair.first.x, this->position.y + pair.first.y};
     Tile tile = pair.second;
@@ -164,7 +164,7 @@ void Character::move(const Point &target_pos)
     {
       vector<Point> candidate_options;
       unordered_map<Point, Tile> surroundings = this->look_around_from(this->position);
-      for (const pair<Point, Tile> &pair : surroundings)
+      for (const pair<const Point, Tile> &pair : surroundings)
       {
         if (is_walkable(pair.second))
         {
@@ -243,7 +243,7 @@ Point Character::find_next_step(const Point &goal)
     }
 
     unordered_map<Point, Tile> surroundings = this->look_around_from(current);
-    for (const pair<Point, Tile> &pair : surroundings)
+    for (const pair<const Point, Tile> &pair : surroundings)
     {
       Point next = {current.x + pair.first.x, current.y + pair.first.y};
       if (is_walkable(pair.second) && came_from.find(next) == came_from.end())
