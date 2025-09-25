@@ -35,13 +35,10 @@ int main(int argc, char *argv[])
     int moves_left = MAX_MOVES;
 
     initscr();
-    cbreak();
-    noecho();
-    keypad(stdscr, true);
+    cbreak();             // Essential: disables line buffering, so input is available immediately.
+    noecho();             // Essential: prevents keypresses from being echoed to the screen.
+    keypad(stdscr, true); // Essential: enables reading function keys (arrows, etc.).
     timeout(0);
-    curs_set(0);
-    leaveok(stdscr, true);
-    scrollok(stdscr, false);
 
     scene.render();
     grigorakis.render();
