@@ -42,8 +42,6 @@ int main(int argc, char *argv[])
   asimenia.render();
   refresh();
 
-  usleep(FRAME_DELAY_MS);
-
   while (gameState != GAME_DONE)
   {
     if (getch() == 27)
@@ -56,11 +54,8 @@ int main(int argc, char *argv[])
       grigorakis.update(asimenia);
       process_character_move(grigorakis, asimenia, scene, gameState);
 
-      if (gameState == GAME_RUNNING || gameState == GAME_WINNING)
-      {
-        asimenia.update(grigorakis);
-        process_character_move(asimenia, grigorakis, scene, gameState);
-      }
+      asimenia.update(grigorakis);
+      process_character_move(asimenia, grigorakis, scene, gameState);
 
       moves_left--;
 

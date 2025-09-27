@@ -2,7 +2,7 @@ CXX := g++
 SRC := $(wildcard *.cpp)
 OUT := output
 
-CXXFLAGS := -std=c++17
+CXXFLAGS := -std=c++11
 LDFLAGS := -lncurses
 DEBUG_FLAGS := -g -Wall -Wextra -Wno-unused
 RUN_FLAGS := map1.txt

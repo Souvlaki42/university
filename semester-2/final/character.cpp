@@ -42,15 +42,8 @@ Point Character::get_position()
   return this->position;
 }
 
-void Character::set_position(Point new_pos)
+void Character::set_position()
 {
-  if (!(new_pos.x == -1 && new_pos.y == -1))
-  {
-    this->position = new_pos;
-    this->visited_counts[key_for_point(new_pos)]++;
-    return;
-  }
-
   Point dimensions = this->scene.get_dimensions();
   Point tmp_pos = {0, 0};
   do
@@ -61,6 +54,13 @@ void Character::set_position(Point new_pos)
 
   this->position = tmp_pos;
   this->visited_counts[key_for_point(tmp_pos)] = 1;
+}
+
+void Character::set_position(Point new_pos)
+{
+  this->position = new_pos;
+  this->visited_counts[key_for_point(new_pos)]++;
+  return;
 }
 
 bool Character::is_trapped()
@@ -231,6 +231,6 @@ void Character::move(Point target_pos)
 std::string Character::key_for_point(Point p)
 {
   char buf[32];
-  snprintf(buf, sizeof(buf), "%d,%d", p.x, p.y);
+  sprintf(buf, "%d,%d", p.x, p.y);
   return std::string(buf);
 }
