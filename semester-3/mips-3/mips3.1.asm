@@ -1,18 +1,18 @@
 .data
-# first
-# number_a: .word 0xffffffff
+# 1.
+# number_a: .word 0x3fffffff
 # number_b: .word 0x3fffffff
 
-# second
+# 2.
 # number_a: .word 0xffffffff
 # number_b: .word 0xffffffff
 
-# third - overflow
+# 3.
 # number_a: .word 0x7fffffff
 # number_b: .word 0x00000001
 
-# forth
-# number_a: .word 0x80000001
+# 4.
+# number_a: .word 0x80000000
 # number_b: .word 0xffffffff
 
 .text
