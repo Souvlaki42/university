@@ -37,5 +37,8 @@
 # Unignore assembly files
 !*.asm
 
+# Unigore shell scripts
+!*.sh
+
 # Ignore libraries
 miniaudio.h
