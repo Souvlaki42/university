@@ -3,13 +3,17 @@
 
 pid_t fork_log(int id) {
   pid_t pid = fork();
+  if (pid < 0)
+    perror("fork() failed");
   if (pid == 0)
     printf("I'm P%d: pid=%d, parent_pid=%d\n", id, getpid(), getppid());
   return pid;
 }
 
 int main() {
-  pid_t pid1 = -1, pid2 = -1, pid3 = -1, pid4 = -1, pid5 = -1, pid6 = -1;
+  pid_t pid1, pid2, pid3, pid4, pid5, pid6, wpid;
+  int status;
+
   printf("I'm P0: pid=%d, parent_pid=%d\n", getpid(), getppid());
 
   pid1 = fork_log(1);
