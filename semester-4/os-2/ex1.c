@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 pid_t fork_log(int id) {
@@ -19,6 +20,13 @@ int main() {
   pid1 = fork_log(1);
   if (pid1 > 0) {
     pid2 = fork_log(2);
+
+    if (pid2 > 0) {
+      while ((wpid = waitpid(pid1, &status, 0)) > 0)
+        ;
+      printf("Child process exitted with status: %d\n", status);
+      execl("/bin/cat", __FILE__, NULL);
+    }
 
     if (pid2 == 0) {
       pid4 = fork_log(4);
