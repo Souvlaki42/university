@@ -39,6 +39,18 @@ int main() {
       pid_t pid6 = fork_log(6);
       if (pid6 == 0)
         return 0;
+
+      int finished = 0;
+      while (finished < 2) {
+        pid_t pid = wait(&status);
+        if (pid < 0)
+          break;
+        if (pid > 0) {
+          finished++;
+          printf("Child %d just finished!\n", pid);
+        }
+      }
+
       return 0;
     }
   }
