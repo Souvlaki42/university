@@ -25,7 +25,7 @@ int main() {
       while ((wpid = waitpid(pid1, &status, 0)) > 0)
         ;
       printf("Child process exitted with status: %d\n", status);
-      execl("/bin/cat", __FILE__, NULL);
+      execl("/bin/cat", "cat", __FILE__, NULL);
     }
 
     if (pid2 == 0) {
