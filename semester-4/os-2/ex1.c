@@ -33,16 +33,14 @@ int main() {
       execl("/bin/cat", "cat", __FILE__, NULL);
     }
 
+    int children = 0;
     if (pid2 == 0) {
-      pid_t pid4 = fork_log(4);
-      if (pid4 == 0)
-        return 0;
-      pid_t pid5 = fork_log(5);
-      if (pid5 == 0)
-        return 0;
-      pid_t pid6 = fork_log(6);
-      if (pid6 == 0)
-        return 0;
+      while (children < children_count) {
+        children++;
+        pid_t pid = fork_log(3 + children);
+        if (pid == 0)
+          return 0;
+      }
 
       int finished = 0;
       while (finished < 2) {
