@@ -42,8 +42,10 @@ int main() {
           return 0;
       }
 
-      int finished = 0;
-      while (finished < 2) {
+      int finished = 0, max_wait = 2;
+      if (children_count < 2)
+        max_wait = children_count;
+      while (finished < max_wait) {
         pid_t pid = wait(&status);
         if (pid < 0)
           break;
