@@ -16,7 +16,11 @@ pid_t fork_log(int id) {
 
 int main() {
   printf("I'm P0: pid=%d, parent_pid=%d\n", getpid(), getppid());
-  int status;
+  int status, children_count;
+
+  printf("Give the number of children for process 2: ");
+  scanf("%d", &children_count);
+  printf("\n");
 
   pid_t pid1 = fork_log(1);
   if (pid1 > 0) {
