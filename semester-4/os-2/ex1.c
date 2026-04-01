@@ -46,8 +46,32 @@ int main() {
   }
 
   if (pid1 == 0) {
+    int pipefd[2];
+    char buff[21];
+
+    if (pipe(pipefd) < 0) {
+      perror("pipe() failed");
+      return 2;
+    }
     pid3 = fork_log(3);
-    return 0;
+    if (pid3 == 0) {
+      if (write(pipefd[1], "hello from your child", 21) != 21) {
+        perror("pipe write() failed");
+        return 2;
+      }
+      return 0;
+    }
+
+    if (pid3 > 0) {
+      while ((wpid = waitpid(pid3, &status, 0)) > 0)
+        ;
+      if (read(pipefd[0], buff, sizeof(buff)) <= 0) {
+        perror("pipe read() failed");
+        return 2;
+      }
+
+      printf("%s\n", buff);
+    }
   }
 
   return 0;
