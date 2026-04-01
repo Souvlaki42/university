@@ -61,7 +61,7 @@ int main() {
 
   if (pid1 == 0) {
     int pipefd[2];
-    char buff[21];
+    char buff[22];
 
     if (pipe(pipefd) < 0) {
       perror("pipe() failed");
@@ -69,7 +69,7 @@ int main() {
     }
     pid_t pid3 = fork_log(3);
     if (pid3 == 0) {
-      if (write(pipefd[1], "hello from your child", 21) != 21) {
+      if (write(pipefd[1], "hello from your child\n", 22) != 22) {
         perror("pipe write() failed");
         return 2;
       }
@@ -84,7 +84,7 @@ int main() {
         return 2;
       }
 
-      printf("%s\n", buff);
+      write(0, buff, sizeof(buff));
     }
   }
 
