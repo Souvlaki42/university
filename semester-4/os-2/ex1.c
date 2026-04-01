@@ -1,11 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 pid_t fork_log(int id) {
   pid_t pid = fork();
-  if (pid < 0)
+  if (pid < 0) {
     perror("fork() failed");
+    exit(2);
+  }
   if (pid == 0)
     printf("I'm P%d: pid=%d, parent_pid=%d\n", id, getpid(), getppid());
   return pid;
