@@ -40,5 +40,8 @@
 # Unigore shell scripts
 !*.sh
 
+# Unignore java scripts
+!*.java
+
 # Ignore libraries
 miniaudio.h
