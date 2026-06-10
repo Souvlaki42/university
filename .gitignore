@@ -1,47 +1,35 @@
-# Ignore all
+# wildcard
 *
-
-# Unignore all with c,cpp,h,hpp extensions
-!*.c
-!*.cpp
-!*.h
-!*.hpp
-!Makefile
-
-# Unignore README.md
-!README.md
-
-# Unignore previews
-!preview.*
-
-# Unignore audio
-!*.wav
-!*.mp3
-
-# Unignore maps
-!map*.txt
-!map*.dat
-
-# Unignore presentation pdfs
-!presentation.pdf
-
-# Unignore LICENSE
-!LICENSE
-
-# Unignore all dirs
+!*.*
 !*/
 
-# Unignore python scripts
-!*.py
+# AI
+*.md*
 
-# Unignore assembly files
-!*.asm
+# mysql
+mysql-data/
 
-# Unigore shell scripts
-!*.sh
+# java
+*.class
 
-# Unignore java scripts
-!*.java
+# data
+*.txt
+*.dat
 
-# Ignore libraries
-miniaudio.h
+# pdfs
+*.pdf
+
+# documents
+*.odt
+*.docx
+
+# images
+*.png
+*.jpg
+
+# logs
+*.log
+
+# outs
+*.out
+*.bin
