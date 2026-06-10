@@ -1,0 +1,11 @@
+services:
+  db:
+    image: docker.io/mysql
+    container_name: mysql
+    restart: always
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: hello_there
