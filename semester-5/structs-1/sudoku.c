@@ -78,6 +78,7 @@ char **create_board(int width, int height) {
   return board;
 }
 
+// Διαβάζει το αρχειο του puzzle σε εναν δυναμικα δεσμευμένο πίνακα 9χ9 θέσεων και ελέγχει τις γραμμές του αρχείου.
 int read_puzzle(FILE *fp, char **board) {
   char* buf = malloc(11);
   if (buf == NULL) {
@@ -99,6 +100,7 @@ int read_puzzle(FILE *fp, char **board) {
   return 0;
 }
 
+// Ελέγχει αν η γραμμή αποτελείτε μόνο από αριθμούς και τελιώνει σε αλλαγή γραμμής
 int check_line(char *line, int row) {
   for (int col = 0; col < 9; col++)
     if (line[col] < '0' || line[col] > '9') {
@@ -123,6 +125,7 @@ void print_board(char **board) {
   }
 }
 
+// Έλεγχει αν ένας πίνακας 9 θέσεων περιλαμβάνει κάπιον αριθμό πάνω απο μία φορες
 int check_duplicates(char *nines) {
   int* check = calloc(9, sizeof(int));
 
@@ -140,10 +143,11 @@ int check_duplicates(char *nines) {
   return 0;
 }
 
+// Ελέγχει αν κάποια από τις γραμμές, στήλες ή τετράγωνα του puzzle περιλαμβάνει κάποιον αριθμό πάνω απο μία φορες
 int check_board(char **board) {
   char* nines = malloc(9);
 
-  // Ελέγχω γραμμές
+  // Ελέγχει γραμμές
   for (int row = 0; row < 9; row++) {
     memcpy(nines, board[row], 9);
     int dups = check_duplicates(nines);
@@ -154,7 +158,7 @@ int check_board(char **board) {
     }
   }
 
-  // Ελέγχω στήλες
+  // Ελέγχει στήλες
   for (int col = 0; col < 9; col++) {
     for (int row = 0; row < 9; row++) {
       nines[row] = board[row][col];
@@ -167,7 +171,7 @@ int check_board(char **board) {
     }
   }
 
-  // Ελέγχω τετράγωνα
+  // Ελέγχει τετράγωνα
   for (int i = 0; i < 9; i++) {
     int p = 0;
     int y = i / 3 * 3;
@@ -189,6 +193,7 @@ int check_board(char **board) {
   return 0;
 }
 
+// Ελέγχει αν υπάρχει διάταξη του πίνακα 9χ9 θέσεων γεμάτη με νούμερα που δεν έχει διπλά
 int solve_board(char **board) {
   for (int row = 0; row < 9; row++) {
     for (int col = 0; col < 9; col++) {
