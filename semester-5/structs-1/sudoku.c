@@ -5,6 +5,7 @@
 char ** create_board(int, int);
 int read_puzzle(FILE *, char **);
 int check_line(char *, int);
+int check_duplicates(char *);
 void print_board(char **);
 
 int main(int argc, char **argv) {
@@ -40,6 +41,8 @@ int main(int argc, char **argv) {
 
   printf("Το sudoku στην αρχή:\n");
   print_board(board);
+
+  check_board(board);
 
   fclose(fp);
   for (int i = 0; i < 9; i++) {
@@ -108,4 +111,21 @@ void print_board(char **board) {
     putchar('\n');
     if (row % 3 == 2) putchar('\n');
   }
+}
+
+int check_duplicates(char *nines) {
+  int* check = calloc(9, sizeof(int));
+
+  for (int pos = 0; pos < 9; pos++) {
+    int num = nines[pos] - '0';
+    if (num == 0) continue;
+    check[num - 1] += 1;
+    if (check[num - 1] > 1) {
+      free(check);
+      return pos;
+    } 
+  }
+
+  free(check);
+  return 0;
 }
