@@ -46,6 +46,14 @@ int main(int argc, char **argv) {
 
   check_board(board);
 
+  printf("\nΠροσπάθεια επύλησης του sudoku:\n");
+  if (solve_board(board) == 0) {
+    printf("\nΤο sudoku λύθηκε: \n");
+    print_board(board);
+  } else {
+    printf("\nΤο sudoku δεν λύνεται\n");
+  }
+
   fclose(fp);
   for (int i = 0; i < 9; i++) {
     free(board[i]);
