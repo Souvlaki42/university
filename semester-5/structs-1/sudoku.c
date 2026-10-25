@@ -4,6 +4,7 @@
 
 char ** create_board(int, int);
 int read_puzzle(FILE *, char **);
+int check_line(char *, int);
 
 int main(int argc, char **argv) {
   int status = 0;
@@ -77,5 +78,18 @@ int read_puzzle(FILE *fp, char **board) {
     }
   }
   free(buf);
+  return 0;
+}
+
+int check_line(char *line, int row) {
+  for (int col = 0; col < 9; col++)
+    if (line[col] < '0' || line[col] > '9') {
+      fprintf(stderr, "Γραμμή %d: Ο χαρακτήρας %c δεν είναι αριθμος\n", row + 1, line[col]);
+      return -1;
+    }
+  if (line[9] != '\n') {
+    fprintf(stderr, "Γραμμή %d: Λείπει ο χαρακτήρας αλλαγής γραμμής\n", row + 1);
+    return -1;
+  }
   return 0;
 }
