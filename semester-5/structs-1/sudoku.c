@@ -8,6 +8,7 @@ int check_line(char *, int);
 int check_duplicates(char *);
 void print_board(char **);
 int check_board(char **);
+int solve_board(char **);
 
 int main(int argc, char **argv) {
   int status = 0;
@@ -177,5 +178,22 @@ int check_board(char **board) {
   }
 
   free(nines);
+  return 0;
+}
+
+int solve_board(char **board) {
+  for (int row = 0; row < 9; row++) {
+    for (int col = 0; col < 9; col++) {
+      if (board[row][col] != '0') continue;
+      for (char digit = '1'; digit <= '9'; digit++) {
+        board[row][col] = digit;
+        if (check_board(board) == 0 && solve_board(board) == 0) {
+          return 0;
+        }
+        board[row][col] = '0';
+      }
+      return -1;
+    }
+  }
   return 0;
 }
