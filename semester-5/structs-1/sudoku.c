@@ -3,6 +3,8 @@
 #include <string.h>
 
 char ** create_board(int, int);
+int read_puzzle(FILE *, char **);
+
 int main(int argc, char **argv) {
   int status = 0;
 
@@ -21,6 +23,17 @@ int main(int argc, char **argv) {
   
   if (board == NULL) {
     fprintf(stderr, "Αδυναμία δέσμέυσης μνήμης\n");
+  }
+  
+  status = read_puzzle(fp, board);
+  
+  if (status == -2) {
+    fprintf(stderr, "Αδυναμία δέσμέυσης μνήμης\n");
+  }
+
+  if (status == -1) {
+    fprintf(stderr, "Πρόβλημα με το περιεχόμενο του αρχείου %s\n", argv[1]);
+    return 1;
   }
   fclose(fp);
   for (int i = 0; i < 9; i++) {
@@ -44,4 +57,25 @@ char **create_board(int width, int height) {
   }
 
   return board;
+}
+
+int read_puzzle(FILE *fp, char **board) {
+  char* buf = malloc(11);
+  if (buf == NULL) {
+    free(buf);
+    return -2;
+  }
+
+  for (int row = 0; row < 9; row++) {
+    fgets(buf, 11, fp);
+    if (check_line(buf, row) == -1) {
+      free(buf);
+      return -1;
+    }
+    for (int col = 0; col < 9; col++) {
+      board[row][col] = buf[col];
+    }
+  }
+  free(buf);
+  return 0;
 }
