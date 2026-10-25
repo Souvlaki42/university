@@ -5,6 +5,7 @@
 char ** create_board(int, int);
 int read_puzzle(FILE *, char **);
 int check_line(char *, int);
+void print_board(char **);
 
 int main(int argc, char **argv) {
   int status = 0;
@@ -36,6 +37,10 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Πρόβλημα με το περιεχόμενο του αρχείου %s\n", argv[1]);
     return 1;
   }
+
+  printf("Το sudoku στην αρχή:\n");
+  print_board(board);
+
   fclose(fp);
   for (int i = 0; i < 9; i++) {
     free(board[i]);
@@ -92,4 +97,15 @@ int check_line(char *line, int row) {
     return -1;
   }
   return 0;
+}
+
+void print_board(char **board) {
+  for (int row = 0; row < 9; row++) {
+    for (int col = 0; col < 9; col++) {
+      putchar(board[row][col]);
+      if (col % 3 == 2) putchar(' ');
+    }
+    putchar('\n');
+    if (row % 3 == 2) putchar('\n');
+  }
 }
