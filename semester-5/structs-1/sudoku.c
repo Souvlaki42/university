@@ -7,6 +7,7 @@ int read_puzzle(FILE *, char **);
 int check_line(char *, int);
 int check_duplicates(char *);
 void print_board(char **);
+int check_board(char **);
 
 int main(int argc, char **argv) {
   int status = 0;
@@ -127,5 +128,54 @@ int check_duplicates(char *nines) {
   }
 
   free(check);
+  return 0;
+}
+
+int check_board(char **board) {
+  char* nines = malloc(9);
+
+  // Ελέγχω γραμμές
+  for (int row = 0; row < 9; row++) {
+    memcpy(nines, board[row], 9);
+    int dups = check_duplicates(nines);
+    if (dups > 0) {
+      printf("Σειρά %d: Ο αριθμός %c επαναλαμβάνεται\n", dups + 1, nines[dups]);
+      free(nines);
+      return -1;
+    }
+  }
+
+  // Ελέγχω στήλες
+  for (int col = 0; col < 9; col++) {
+    for (int row = 0; row < 9; row++) {
+      nines[row] = board[row][col];
+    }
+    int dups = check_duplicates(nines);
+    if (dups > 0) {
+      printf("Στήλη %d: Ο αριθμός %c επαναλαμβάνεται\n", dups + 1, nines[dups]);
+      free(nines);
+      return -1;
+    }
+  }
+
+  // Ελέγχω τετράγωνα
+  for (int i = 0; i < 9; i++) {
+    int p = 0;
+    int y = i / 3 * 3;
+    int x = i % 3 * 3;
+    for (int row = y; row <= y + 2; row++) {
+      for (int col = x; col <= x + 2; col++) {
+        nines[p++] = board[row][col]; 
+      }
+    }
+    int dups = check_duplicates(nines);
+    if (dups > 0) {
+      printf("Τετράγωνο %d: Ο αριθμός %c επαναλαμβάνεται\n", i, nines[dups]);
+      free(nines);
+      return -1;
+    }
+  }
+
+  free(nines);
   return 0;
 }
