@@ -5,9 +5,10 @@
 
 # AI
 *.md*
+!*README*
 
 # mysql
-mysql-data/
+*/mysql-data/
 
 # java
 *.class
@@ -33,3 +34,9 @@ mysql-data/
 # outs
 *.out
 *.bin
+
+# datasets
+*data*/
+
+# makefiles
+!*Makefile
