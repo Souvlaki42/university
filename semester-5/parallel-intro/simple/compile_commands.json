@@ -1,0 +1,17 @@
+[
+  {
+    "file": "fires.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I/usr/include/mpich-x86_64",
+      "-ggdb",
+      "-Wall",
+      "-Wextra",
+      "fires.c",
+      "-o",
+      "fires"
+    ],
+    "directory": "/home/souvlaki42/projects/university/semester-5/parallel-intro/simple",
+    "output": "fires"
+  }
+]
