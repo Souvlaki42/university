@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
                                "Macedonia_Former_Yugoslav_Republic_of",
                                "Bosnia_and_Herzegovina"};
 
-  sprintf(filename, "viirs-jpss1-data-2025/viirs-jpss1_2025_%s.csv",
+  sprintf(filename, "viirs-jpss1-2025-data/viirs-jpss1_2025_%s.csv",
           countries[rank]);
 
   FILE *fileptr = fopen(filename, "r");
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   while (fgets(line, sizeof(line), fileptr) != NULL)
     fire_count++;
 
-  printf("%d fires have been recorded in %s in 2025\n", fire_count,
+  printf("%d fires have been recorded in %s in 2025\n", --fire_count,
          countries[rank]);
 
   MPI_Finalize();
