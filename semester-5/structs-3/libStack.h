@@ -11,14 +11,13 @@ void stack_init(Stack *stack, int cap);
 void stack_push(Stack *stack, int value);
 int stack_pop(Stack *stack);
 
-typedef struct {
-  int *start;
-  int size;
-  int cap;
-} DynamicStack;
+typedef struct node {
+  int value;
+  struct node *next;
+} Node;
 
-void dstack_init(DynamicStack *stack);
-void dstack_push(DynamicStack *stack, int value);
-int dstack_pop(DynamicStack *stack);
+void dstack_init(Node *stack);
+void dstack_push(Node **stack, int value);
+int dstack_pop(Node **stack);
 
 #endif
