@@ -4,7 +4,7 @@
 int main(void) {
   printf("Στατική στοίβα:\n");
 
-  Stack stack = {0};
+  Stack stack;
   stack_init(&stack, 15);
 
   for (int i = 1; i <= 15; i++) {
@@ -18,7 +18,7 @@ int main(void) {
 
   printf("Δυναμική στοίβα:\n");
 
-  Node *stack2 = {0};
+  Node *stack2;
   dstack_init(&stack2);
 
   for (int i = 1; i <= 15; i++) {
