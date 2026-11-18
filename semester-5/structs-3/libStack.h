@@ -16,7 +16,7 @@ typedef struct node {
   struct node *next;
 } Node;
 
-void dstack_init(Node *stack);
+void dstack_init(Node **stack);
 void dstack_push(Node **stack, int value);
 int dstack_pop(Node **stack);
 

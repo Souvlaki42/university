@@ -19,7 +19,7 @@ int main(void) {
   printf("Δυναμική στοίβα:\n");
 
   Node *stack2 = {0};
-  // dstack_init(stack2);
+  dstack_init(&stack2);
 
   for (int i = 1; i <= 15; i++) {
     printf("%dο εισαγωγή στοίβας: %d\n", i, i);

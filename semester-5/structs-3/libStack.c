@@ -38,16 +38,7 @@ int stack_pop(Stack *stack) {
   return value;
 }
 
-void dstack_init(Node *stack) {
-  Node *new_item = malloc(sizeof(Node));
-  if (new_item == NULL) {
-    fprintf(stderr, "Η στοίβα ξεχίλησε\n");
-    return;
-  }
-  new_item->value = 0;
-  new_item->next = NULL;
-  stack = new_item;
-}
+void dstack_init(Node **stack) { *stack = NULL; }
 
 void dstack_push(Node **stack, int value) {
   Node *new_item = malloc(sizeof(Node));
