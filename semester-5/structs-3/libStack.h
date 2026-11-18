@@ -20,4 +20,15 @@ void dstack_init(Node **stack);
 void dstack_push(Node **stack, int value);
 int dstack_pop(Node **stack);
 
+typedef struct {
+  int *items;
+  int start;
+  int end;
+  int cap;
+} Queue;
+
+void queue_init(Queue *queue, int cap);
+void queue_push(Queue *queue, int value);
+int queue_pop(Queue *queue);
+
 #endif

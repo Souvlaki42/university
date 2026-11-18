@@ -64,3 +64,39 @@ int dstack_pop(Node **stack) {
   free(temp);
   return value;
 }
+
+void queue_init(Queue *queue, int cap) {
+  queue->cap = cap;
+  queue->items = malloc(queue->cap * sizeof(int));
+  queue->start = -1;
+  queue->end = 0;
+}
+
+void queue_push(Queue *queue, int value) {
+  if (queue->end == queue->cap) {
+    fprintf(stderr, "Η ουρά ξεχίλησε\n");
+    return;
+  }
+
+  *(queue->items + queue->end) = value;
+  queue->end++;
+}
+
+int queue_pop(Queue *queue) {
+  if (queue->start == queue->end - 1) {
+    fprintf(stderr, "Η ουρά άδειασε\n");
+    return -1;
+  }
+
+  queue->start++;
+  int value = *(queue->items + queue->start);
+
+  if (queue->start == queue->end - 1) {
+    free(queue->items);
+    queue->items = NULL;
+    queue->cap = 0;
+    printf("Η ουρά δεν χρείαζεται πλέον, η μνήμη αποδεσμεύτηκε\n");
+  }
+
+  return value;
+}
