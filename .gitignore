@@ -34,6 +34,9 @@
 # outs
 *.out
 *.bin
+*.o
+*.a
+*.so
 
 # datasets
 *data*/
